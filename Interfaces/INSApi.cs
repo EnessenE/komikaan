@@ -5,10 +5,10 @@ namespace komikthuis.Interfaces
 {
     public interface INSApi
     {
-        [Get("/disruptions/v3/")]
-        Task<IEnumerable<Disruption>> GetAllDisruptions();
+        [Get("/reisinformatie-api/api/v3/disruptions")]
+        Task<List<Disruption>> GetAllDisruptions();
 
         [Get("/reisinformatie-api/api/v2/stations")]
-        Task<IEnumerable<Station>> GetAllStations();
+        Task<StationRoot> GetAllStations();
     }
 }

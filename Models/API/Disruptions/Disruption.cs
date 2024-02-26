@@ -61,6 +61,7 @@
     public class Disruption
     {
         public string id { get; set; }
+        public object titleSections { get; set; }
         public bool isActive { get; set; }
         public string title { get; set; }
         public string type { get; set; }
