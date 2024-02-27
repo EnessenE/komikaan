@@ -11,5 +11,5 @@ public class SimpleDisruption
     public IEnumerable<string> Descriptions { get; set; }
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public DisruptionType Type { get; set; }
-    public IEnumerable<List<string>> Advices { get; set; }
+    public IEnumerable<string> Advices { get; set; }
 }

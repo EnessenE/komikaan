@@ -64,6 +64,7 @@ namespace komikthuis.Context
             var disruptions = relevantToDisruptions;
             disruptions.AddRange(relevantFromDisruptions);
             disruptions = disruptions.FindAll(disruption => disruption.isActive).ToList();
+
             var data = new List<SimpleDisruption>();
             foreach (var disruption in disruptions)
             {
@@ -82,7 +83,7 @@ namespace komikthuis.Context
             simpleDisruption.Descriptions = simpleText.Select(situation => situation.label);
             var advices = disruption.timespans.Select(x => x.advices);
 
-            simpleDisruption.Advices = advices;
+            simpleDisruption.Advices = advices.SelectMany(advice=>advice);
             simpleDisruption.ExpectedEnd = disruption.end;
 
 
@@ -126,20 +127,44 @@ namespace komikthuis.Context
             simpleTravelAdvice.ActualDurationInMinutes = trip.actualDurationInMinutes;
             simpleTravelAdvice.Route = new List<SimpleRoutePart>();
 
+            
             simpleTravelAdvice.Route.Add(new SimpleRoutePart()
             {
                 Cancelled = false,
-                Name = from
+                Name = from,
+                RealisticTransfer = true,
+                PlannedArrival = null,
+                ActualArrival = null
             });
-
+            var previous = simpleTravelAdvice.Route.First();
+            Leg previousLeg = null;
             foreach (var leg in trip.legs)
             {
                 var routePart = new SimpleRoutePart();
+                
+                routePart.Name = leg.destination.name;
+                
+                routePart.Cancelled = leg.partCancelled || leg.cancelled;
+                routePart.RealisticTransfer = leg.changePossible;
+                routePart.AlternativeTransport = leg.alternativeTransport;
 
-                routePart.Name = leg.direction;
-                routePart.Cancelled = leg.cancelled;
+                previous.PlannedDeparture = leg.origin.plannedDateTime;
+                previous.ActualDeparture = leg.origin.actualDateTime;
+                if (previousLeg != null)
+                {
+                    previous.PlannedArrival = previousLeg.destination.plannedDateTime;
+                    previous.ActualArrival = previousLeg.destination.actualDateTime;
+                }
 
+                previous = routePart;
+                previousLeg = leg;
                 simpleTravelAdvice.Route.Add(routePart);
+            }
+
+            if (previousLeg != null)
+            {
+                previous.PlannedArrival = previousLeg.destination.plannedDateTime;
+                previous.ActualArrival = previousLeg.destination.actualDateTime;
             }
 
 
