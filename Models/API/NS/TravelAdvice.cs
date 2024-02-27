@@ -12,6 +12,7 @@
         public string type { get; set; }
         public int plannedTimeZoneOffset { get; set; }
         public DateTime plannedDateTime { get; set; }
+        public DateTime? actualDateTime { get; set; }
         public string plannedTrack { get; set; }
         public string actualTrack { get; set; }
         public string exitSide { get; set; }
@@ -135,6 +136,7 @@
         public string stationCode { get; set; }
         public string type { get; set; }
         public int plannedTimeZoneOffset { get; set; }
+        public DateTime? actualDateTime { get; set; }
         public DateTime plannedDateTime { get; set; }
         public string plannedTrack { get; set; }
         public string actualTrack { get; set; }
