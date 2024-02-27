@@ -1,4 +1,6 @@
+using komikthuis.Context;
 using komikthuis.Interfaces;
+using komikthuis.Services;
 using Refit;
 using Serilog;
 
@@ -32,7 +34,8 @@ IHttpClientBuilder refitClientBuilder = builder.Services.AddRefitClient<INSApi>(
 refitClientBuilder.AddHttpMessageHandler(serviceProvider
     => new HttpLoggingHandler(serviceProvider.GetRequiredService<ILogger<HttpLoggingHandler>>()));
 refitClientBuilder.Services.AddSingleton<HttpLoggingHandler>();
-
+builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
+builder.Services.AddHostedService<DataService>();
 
 
 var app = builder.Build();
