@@ -66,29 +66,35 @@ namespace komikthuis.Context
             var data = new List<SimpleDisruption>();
             foreach (var disruption in disruptions)
             {
-                _logger.LogInformation("Relevant: {name}, active {act}", disruption.title, disruption.isActive);
-                var simpleDisruption = new SimpleDisruption();
-                simpleDisruption.Title = disruption.title;
-                var simpleText = disruption.timespans.Select(x => x.situation);
-                simpleDisruption.Descriptions = simpleText.Select(situation => situation.label);
-                var advices = disruption.timespans.Select(x => x.advices);
-
-                simpleDisruption.Advices = advices;
-                simpleDisruption.ExpectedEnd = disruption.end;
-
-
-                if (!Enum.TryParse(disruption.type, true, out DisruptionType disruptionType))
-                {
-                    //Incase new disruption types are introduces
-                    disruptionType = DisruptionType.Unknown;
-                }
-                simpleDisruption.Source = DataSource.NederlandseSpoorwegen;
-
-                simpleDisruption.Type = disruptionType;
-                data.Add(simpleDisruption);
+                GenerateDisruption(disruption, data);
             }
 
             return data;
+        }
+
+        private void GenerateDisruption(Disruption disruption, List<SimpleDisruption> data)
+        {
+            _logger.LogInformation("Relevant: {name}, active {act}", disruption.title, disruption.isActive);
+            var simpleDisruption = new SimpleDisruption();
+            simpleDisruption.Title = disruption.title;
+            var simpleText = disruption.timespans.Select(x => x.situation);
+            simpleDisruption.Descriptions = simpleText.Select(situation => situation.label);
+            var advices = disruption.timespans.Select(x => x.advices);
+
+            simpleDisruption.Advices = advices;
+            simpleDisruption.ExpectedEnd = disruption.end;
+
+
+            if (!Enum.TryParse(disruption.type, true, out DisruptionType disruptionType))
+            {
+                //Incase new disruption types are introduces
+                disruptionType = DisruptionType.Unknown;
+            }
+
+            simpleDisruption.Source = DataSource.NederlandseSpoorwegen;
+
+            simpleDisruption.Type = disruptionType;
+            data.Add(simpleDisruption);
         }
 
 
@@ -106,33 +112,37 @@ namespace komikthuis.Context
             var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
             foreach (var trip in travelAdvice.trips)
             {
-                var simpleTravelAdvice = new SimpleTravelAdvice();
-                simpleTravelAdvice.Source = DataSource.NederlandseSpoorwegen;
-                simpleTravelAdvice.PlannedDurationInMinutes = trip.plannedDurationInMinutes;
-                simpleTravelAdvice.ActualDurationInMinutes = trip.actualDurationInMinutes;
-                simpleTravelAdvice.Route = new List<SimpleRoutePart>();
-
-                simpleTravelAdvice.Route.Add(new SimpleRoutePart()
-                {
-                    Cancelled = false,
-                    Name = from
-                });
-
-                foreach (var leg in trip.legs)
-                {
-                    var routePart = new SimpleRoutePart();
-
-                    routePart.Name = leg.direction;
-                    routePart.Cancelled = leg.cancelled;
-
-                    simpleTravelAdvice.Route.Add(routePart);
-                }
-
-
-
-                simplifiedTravelAdvices.Add(simpleTravelAdvice);
+                GenerateTravelAdvice(from, trip, simplifiedTravelAdvices);
             }
             return simplifiedTravelAdvices;
+        }
+
+        private static void GenerateTravelAdvice(string from, Trip trip, List<SimpleTravelAdvice> simplifiedTravelAdvices)
+        {
+            var simpleTravelAdvice = new SimpleTravelAdvice();
+            simpleTravelAdvice.Source = DataSource.NederlandseSpoorwegen;
+            simpleTravelAdvice.PlannedDurationInMinutes = trip.plannedDurationInMinutes;
+            simpleTravelAdvice.ActualDurationInMinutes = trip.actualDurationInMinutes;
+            simpleTravelAdvice.Route = new List<SimpleRoutePart>();
+
+            simpleTravelAdvice.Route.Add(new SimpleRoutePart()
+            {
+                Cancelled = false,
+                Name = from
+            });
+
+            foreach (var leg in trip.legs)
+            {
+                var routePart = new SimpleRoutePart();
+
+                routePart.Name = leg.direction;
+                routePart.Cancelled = leg.cancelled;
+
+                simpleTravelAdvice.Route.Add(routePart);
+            }
+
+
+            simplifiedTravelAdvices.Add(simpleTravelAdvice);
         }
     }
 }
