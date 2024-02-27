@@ -9,6 +9,7 @@ namespace komikthuis.Context
     {
         private readonly INSApi _nsApi;
         private readonly ILogger<NSContext> _logger;
+
         private List<Disruption> _allDisruptions;
         private IDictionary<string, Station> _allStations;
 
