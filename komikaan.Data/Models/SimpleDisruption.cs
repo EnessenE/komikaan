@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using komikaan.Data.Enums;
 using komikaan.Enums;
 
 namespace komikaan.Models;
