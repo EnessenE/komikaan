@@ -1,4 +1,4 @@
-﻿namespace komikthuis.Models.API.Disruptions
+﻿namespace komikaan.Models.API.NS
 {
     public class AdditionalTravelTime
     {

@@ -1,4 +1,4 @@
-﻿namespace komikthuis.Models.API.NS
+﻿namespace komikaan.Models.API.NS
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class Destination

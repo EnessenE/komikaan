@@ -1,8 +1,7 @@
 using System.Text.Json.Serialization;
-using komikthuis.Enums;
-using komikthuis.Models.API.NS;
+using komikaan.Enums;
 
-namespace komikthuis.Models;
+namespace komikaan.Models;
 
 public class JourneyResult
 {

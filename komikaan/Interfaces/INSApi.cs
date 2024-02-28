@@ -1,8 +1,7 @@
-﻿using komikthuis.Models.API.Disruptions;
-using komikthuis.Models.API.NS;
+﻿using komikaan.Models.API.NS;
 using Refit;
 
-namespace komikthuis.Interfaces
+namespace komikaan.Interfaces
 {
     public interface INSApi
     {

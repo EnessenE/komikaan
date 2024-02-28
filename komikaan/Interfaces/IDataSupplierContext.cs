@@ -1,7 +1,7 @@
-﻿using komikthuis.Models;
-using komikthuis.Models.API.Disruptions;
+﻿using komikaan.Models;
+using komikaan.Models.API.NS;
 
-namespace komikthuis.Interfaces;
+namespace komikaan.Interfaces;
 
 public interface IDataSupplierContext
 {

@@ -1,4 +1,4 @@
-﻿namespace komikthuis.Models;
+﻿namespace komikaan.Models;
 
 public class SimpleRoutePart
 {

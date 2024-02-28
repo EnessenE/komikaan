@@ -1,4 +1,4 @@
-namespace komikthuis.Enums;
+namespace komikaan.Enums;
 
 public enum DisruptionType
 {
