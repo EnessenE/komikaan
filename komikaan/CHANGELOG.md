@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [1.2.1] - 28-02-2024
 ### Changed
+- Prod default port to 80
+
+[1.2.1] - 28-02-2024
+### Changed
 - Change cors policy to include more origins
 - Add Log.Logger for initial log lines
 
