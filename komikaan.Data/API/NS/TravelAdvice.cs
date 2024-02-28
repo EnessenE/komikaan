@@ -1,6 +1,6 @@
 ﻿namespace komikaan.Models.API.NS
 {
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
+    //Based on the OpenAPI spec from NS
     public class Destination
     {
         public string name { get; set; }

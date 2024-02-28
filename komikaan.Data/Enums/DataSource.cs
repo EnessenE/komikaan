@@ -1,4 +1,4 @@
-﻿namespace komikaan.Models;
+﻿namespace komikaan.Data.Enums;
 
 public enum DataSource
 {

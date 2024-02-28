@@ -1,4 +1,5 @@
-﻿using komikaan.Enums;
+﻿using komikaan.Data.Enums;
+using komikaan.Enums;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Models.API.NS;

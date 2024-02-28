@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var corsName = "sources";
 
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 

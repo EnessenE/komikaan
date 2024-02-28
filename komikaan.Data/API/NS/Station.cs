@@ -1,5 +1,6 @@
 ﻿namespace komikaan.Models.API.NS
 {
+    //Based on the OpenAPI spec from NS
     public class Namen
     {
         public string lang { get; set; }
