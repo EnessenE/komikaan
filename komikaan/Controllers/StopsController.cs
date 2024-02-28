@@ -24,14 +24,24 @@ namespace komikaan.Controllers
             return data.Keys;
         }
 
-
+        /// <summary>
+        /// Searches through all stops of the datasuppliers
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("search")]
         public async Task<IEnumerable<string>> SearchStops(string filter)
         {
+            _logger.LogInformation("Searching for {name}", filter);
             var data = await _dataSupplier.GetAllStops();
             var names = data.Keys.ToList();
-            var foundResults = names.Where(name => name.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
-            return foundResults.Chunk(10).First() ?? Enumerable.Empty<string>();
+            var foundResults = names.Where(name => name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).ToList();
+
+            if (foundResults.Any())
+            {
+                foundResults = foundResults.Chunk(10).First().ToList();
+            }
+
+            return foundResults;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace komikaan.Controllers
 
             journeyResult.TravelAdvice = (await _dataSupplier.GetTravelAdvice(fromStop, toStop)).ToList();
 
-            if (journeyResult.Disruptions.Any() && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd > DateTime.Now))
+            if (journeyResult.Disruptions.Any() && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd.ToUniversalTime() > DateTime.UtcNow))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
@@ -44,13 +44,5 @@ namespace komikaan.Controllers
 
             return journeyResult;
         }
-
-        [HttpGet("stations")]
-        public async Task<List<string>> GetStations()
-        {
-            var data = await _dataSupplier.GetAllStops();
-            return data.Keys.ToList();
-        }
-
     }
 }
