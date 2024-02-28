@@ -55,25 +55,21 @@ namespace komikaan.Context
 
             var allDisruptions = _allDisruptions;
 
-            var relevantFromDisruptions = allDisruptions.Where(disruption =>
-                disruption.publicationSections.Any(publicationSection => publicationSection.section.stations.Any(station => station.name.Equals(fromStop.namen.lang, StringComparison.InvariantCultureIgnoreCase)))).ToList();
-            var relevantToDisruptions = allDisruptions.Where(disruption =>
-                disruption.publicationSections.Any(publicationSection => publicationSection.section.stations.Any(station => station.name.Equals(toStop.namen.lang, StringComparison.InvariantCultureIgnoreCase)))).ToList();
+            var relevantDisruptions = allDisruptions.Where(disruption =>
+                disruption.publicationSections.Any(publicationSection => publicationSection.section.stations.Any(station => station.name.Equals(toStop.namen.lang, StringComparison.InvariantCultureIgnoreCase) || station.name.Equals(toStop.namen.lang)))).ToList();
 
-            var disruptions = relevantToDisruptions;
-            disruptions.AddRange(relevantFromDisruptions);
-            disruptions = disruptions.FindAll(disruption => disruption.isActive).ToList();
+            relevantDisruptions = relevantDisruptions.FindAll(disruption => disruption.isActive).ToList();
 
             var data = new List<SimpleDisruption>();
-            foreach (var disruption in disruptions)
+            foreach (var disruption in relevantDisruptions)
             {
-                GenerateDisruption(disruption, data);
+                GenerateSimplifiedDisruption(disruption, data);
             }
 
             return data;
         }
 
-        private void GenerateDisruption(Disruption disruption, List<SimpleDisruption> data)
+        private void GenerateSimplifiedDisruption(Disruption disruption, List<SimpleDisruption> data)
         {
             _logger.LogInformation("Relevant: {name}, active {act}", disruption.title, disruption.isActive);
             var simpleDisruption = new SimpleDisruption();
@@ -99,9 +95,9 @@ namespace komikaan.Context
         }
 
 
-        public async Task<IDictionary<string, Station>> GetAllStops()
+        public Task<IDictionary<string, Station>> GetAllStops()
         {
-            return _allStations;
+            return Task.FromResult(_allStations);
         }
 
         public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdvice(string from, string to)
@@ -160,6 +156,7 @@ namespace komikaan.Context
                 simpleTravelAdvice.Route.Add(routePart);
             }
 
+            // To standardize data to our format
             if (previousLeg != null)
             {
                 previous.PlannedArrival = previousLeg.destination.plannedDateTime;
