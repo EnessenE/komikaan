@@ -4,6 +4,7 @@ using komikaan.Interfaces;
 using komikaan.Services;
 using Refit;
 using Serilog;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,10 +12,17 @@ var corsName = "sources";
 
 builder.Configuration.AddEnvironmentVariables();
 
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
 
-Log.Logger.Information("Starting application");
+builder.Host.UseSerilog();
+
+Log.Logger.Information("Starting {app} {version} - {env}",
+    Assembly.GetExecutingAssembly().GetName().Name,
+    Assembly.GetExecutingAssembly().GetName().Version,
+    builder.Environment.EnvironmentName);
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -27,8 +35,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: corsName,
         policy =>
         {
-            policy.WithOrigins("http://localhost:4200",
-                    "https://volt.reasulus.nl")
+            policy.WithOrigins(
+                    "http://localhost:4200",
+                    "https://komikaan.reasulus.nl",
+                    "https://komikaan.nl")
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });
