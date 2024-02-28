@@ -1,3 +1,4 @@
+using komikthuis.Enums;
 using komikthuis.Interfaces;
 using komikthuis.Models;
 using Microsoft.AspNetCore.Mvc;

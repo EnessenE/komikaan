@@ -1,4 +1,4 @@
-namespace komikthuis.Models;
+namespace komikthuis.Enums;
 
 public enum JourneyExpectation
 {
