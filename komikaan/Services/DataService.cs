@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Threading;
-using komikthuis.Interfaces;
+using komikaan.Interfaces;
 
-namespace komikthuis.Services
+namespace komikaan.Services
 {
     public class DataService : BackgroundService
     {

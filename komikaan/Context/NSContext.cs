@@ -1,10 +1,9 @@
-﻿using komikthuis.Enums;
-using komikthuis.Interfaces;
-using komikthuis.Models;
-using komikthuis.Models.API.Disruptions;
-using komikthuis.Models.API.NS;
+﻿using komikaan.Enums;
+using komikaan.Interfaces;
+using komikaan.Models;
+using komikaan.Models.API.NS;
 
-namespace komikthuis.Context
+namespace komikaan.Context
 {
     public class NSContext : IDataSupplierContext
     {
@@ -82,7 +81,7 @@ namespace komikthuis.Context
             simpleDisruption.Descriptions = simpleText.Select(situation => situation.label);
             var advices = disruption.timespans.Select(x => x.advices);
 
-            simpleDisruption.Advices = advices.SelectMany(advice=>advice);
+            simpleDisruption.Advices = advices.SelectMany(advice => advice);
             simpleDisruption.ExpectedEnd = disruption.end;
 
 
@@ -126,7 +125,7 @@ namespace komikthuis.Context
             simpleTravelAdvice.ActualDurationInMinutes = trip.actualDurationInMinutes;
             simpleTravelAdvice.Route = new List<SimpleRoutePart>();
 
-            
+
             simpleTravelAdvice.Route.Add(new SimpleRoutePart()
             {
                 Cancelled = false,
@@ -140,9 +139,9 @@ namespace komikthuis.Context
             foreach (var leg in trip.legs)
             {
                 var routePart = new SimpleRoutePart();
-                
+
                 routePart.Name = leg.destination.name;
-                
+
                 routePart.Cancelled = leg.partCancelled || leg.cancelled;
                 routePart.RealisticTransfer = leg.changePossible;
                 routePart.AlternativeTransport = leg.alternativeTransport;

@@ -1,9 +1,9 @@
-using komikthuis.Enums;
-using komikthuis.Interfaces;
-using komikthuis.Models;
+using komikaan.Enums;
+using komikaan.Interfaces;
+using komikaan.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace komikthuis.Controllers
+namespace komikaan.Controllers
 {
     [ApiController]
     [Route("[controller]")]

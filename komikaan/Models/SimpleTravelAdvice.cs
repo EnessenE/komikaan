@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace komikthuis.Models
+namespace komikaan.Models
 {
     public class SimpleTravelAdvice
     {

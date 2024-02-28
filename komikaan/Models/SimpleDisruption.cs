@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using komikthuis.Enums;
+using komikaan.Enums;
 
-namespace komikthuis.Models;
+namespace komikaan.Models;
 
 public class SimpleDisruption
 {

@@ -1,6 +1,6 @@
-using komikthuis.Context;
-using komikthuis.Interfaces;
-using komikthuis.Services;
+using komikaan.Context;
+using komikaan.Interfaces;
+using komikaan.Services;
 using Refit;
 using Serilog;
 

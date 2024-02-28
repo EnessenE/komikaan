@@ -1,8 +1,7 @@
-using komikthuis.Interfaces;
-using komikthuis.Models;
+using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace komikthuis.Controllers
+namespace komikaan.Controllers
 {
     [ApiController]
     [Route("[controller]")]
