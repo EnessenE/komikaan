@@ -1,4 +1,5 @@
-﻿using komikthuis.Interfaces;
+﻿using komikthuis.Enums;
+using komikthuis.Interfaces;
 using komikthuis.Models;
 using komikthuis.Models.API.Disruptions;
 using komikthuis.Models.API.NS;
@@ -19,11 +20,9 @@ namespace komikthuis.Context
             _logger = logger;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task LoadRelevantData(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Starting the NS Context");
             await GetAllData();
-            _logger.LogInformation("Started the NS Context");
         }
 
         private async Task GetAllData()
