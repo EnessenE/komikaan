@@ -9,17 +9,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["komikthuis.csproj", "."]
-RUN dotnet restore "./././komikthuis.csproj"
+COPY ["komikaan.csproj", "."]
+RUN dotnet restore "./././komikaan.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "./komikthuis.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./komikaan.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./komikthuis.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./komikaan.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "komikthuis.dll"]
+ENTRYPOINT ["dotnet", "komikaan.dll"]
