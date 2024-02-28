@@ -3,6 +3,7 @@ using komikaan.Enums;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Models.API.NS;
+using Serilog;
 
 namespace komikaan.Context
 {
@@ -140,15 +141,16 @@ namespace komikaan.Context
                 routePart.Name = leg.destination.name;
 
                 routePart.Cancelled = leg.partCancelled || leg.cancelled;
-                routePart.RealisticTransfer = leg.changePossible;
                 routePart.AlternativeTransport = leg.alternativeTransport;
 
                 previous.PlannedDeparture = leg.origin.plannedDateTime;
                 previous.ActualDeparture = leg.origin.actualDateTime;
+
                 if (previousLeg != null)
                 {
                     previous.PlannedArrival = previousLeg.destination.plannedDateTime;
                     previous.ActualArrival = previousLeg.destination.actualDateTime;
+                    previous.RealisticTransfer = previousLeg.changePossible;
                 }
 
                 previous = routePart;
@@ -161,6 +163,7 @@ namespace komikaan.Context
             {
                 previous.PlannedArrival = previousLeg.destination.plannedDateTime;
                 previous.ActualArrival = previousLeg.destination.actualDateTime;
+                previous.RealisticTransfer = true;
             }
 
 
