@@ -41,7 +41,7 @@ jobs:
             sha: context.sha
           })
 
-    - name: Build and push api
+    - name: Build and push
       uses: docker/build-push-action@v2
       with:
         context: .
