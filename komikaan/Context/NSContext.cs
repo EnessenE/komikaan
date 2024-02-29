@@ -122,8 +122,10 @@ namespace komikaan.Context
             {
                 previous.PlannedArrival = previousLeg.destination.plannedDateTime;
                 previous.ActualArrival = previousLeg.destination.actualDateTime;
+
                 previous.PlannedArrivalTrack = previousLeg.destination.plannedTrack;
                 previous.ActualArrivalTrack = previousLeg.destination.actualTrack;
+
                 previous.RealisticTransfer = true;
             }
 
