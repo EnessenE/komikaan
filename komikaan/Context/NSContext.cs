@@ -99,7 +99,7 @@ namespace komikaan.Context
                 previous.ActualDeparture = leg.origin.actualDateTime;
 
                 previous.PlannedDepartureTrack = leg.origin.plannedTrack;
-                previous.ActualDeperatureTrack = leg.origin.actualTrack;
+                previous.ActualDepartureTrack = leg.origin.actualTrack;
 
                 if (previousLeg != null)
                 {
@@ -122,6 +122,8 @@ namespace komikaan.Context
             {
                 previous.PlannedArrival = previousLeg.destination.plannedDateTime;
                 previous.ActualArrival = previousLeg.destination.actualDateTime;
+                previous.PlannedArrivalTrack = previousLeg.destination.plannedTrack;
+                previous.ActualArrivalTrack = previousLeg.destination.actualTrack;
                 previous.RealisticTransfer = true;
             }
 
