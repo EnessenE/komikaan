@@ -133,8 +133,11 @@ namespace komikaan.Context
                 ActualArrival = null
             });
 
+            // We see these objects different then the NS. We look at it per station as thats in our interest
+            // While the NS looks at it per leg, so sometimes we have to look at the previous item to look forward
             var previous = simpleTravelAdvice.Route.First();
             Leg previousLeg = null;
+
             foreach (var leg in trip.legs)
             {
                 var routePart = new SimpleRoutePart();
@@ -147,10 +150,17 @@ namespace komikaan.Context
                 previous.PlannedDeparture = leg.origin.plannedDateTime;
                 previous.ActualDeparture = leg.origin.actualDateTime;
 
+                previous.PlannedDepartureTrack = leg.origin.plannedTrack;
+                previous.ActualDeperatureTrack = leg.origin.actualTrack;
+
                 if (previousLeg != null)
                 {
                     previous.PlannedArrival = previousLeg.destination.plannedDateTime;
                     previous.ActualArrival = previousLeg.destination.actualDateTime;
+
+                    previous.PlannedArrivalTrack = previousLeg.destination.plannedTrack;
+                    previous.ActualArrivalTrack = previousLeg.destination.actualTrack;
+
                     previous.RealisticTransfer = previousLeg.changePossible;
                 }
 
