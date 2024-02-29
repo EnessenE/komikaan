@@ -32,7 +32,7 @@ namespace komikaan.Controllers
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (journeyResult.Disruptions.All(disruption => disruption.Type != DisruptionType.Maintenance) || journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
+            else if (journeyResult.Disruptions.All(disruption => disruption.Type != DisruptionType.Maintenance) && journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }
