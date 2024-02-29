@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace komikaan.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("v1/[controller]")]
     public class DisruptionController : ControllerBase
     {
         private readonly ILogger<DisruptionController> _logger;
