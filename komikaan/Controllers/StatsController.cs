@@ -17,7 +17,7 @@ namespace komikaan.Controllers
 
 
         [HttpGet()]
-        public async Task<TransportStatistics> GetStops()
+        public async Task<TransportStatistics> GetStopsAsync()
         {
             var stats = new TransportStatistics();
             foreach (var dataSupplier in _dataSuppliers)

@@ -23,7 +23,7 @@ namespace komikaan.Services
             {
                 while (await _periodicTimer.WaitForNextTickAsync(stoppingToken))
                 {
-                    await LoadAllDataSuppliers(stoppingToken);
+                    await LoadAllDataSuppliersAsync(stoppingToken);
                 }
             }
             catch (OperationCanceledException)
@@ -32,29 +32,29 @@ namespace komikaan.Services
             }
         }
 
-        private async Task LoadAllDataSuppliers(CancellationToken stoppingToken)
+        private async Task LoadAllDataSuppliersAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Reloading all data suppliers");
             foreach (var dataSupplier in _dataSuppliers)
             {
-                await LoadDataSupplier(stoppingToken, dataSupplier);
+                await LoadDataSupplierAsync(stoppingToken, dataSupplier);
             }
 
             _logger.LogInformation("Finished reloading all data suppliers");
         }
 
-        private async Task LoadDataSupplier(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
+        private async Task LoadDataSupplierAsync(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
         {
             _logger.LogInformation("Reloading Datasupplier {name}", dataSupplier.GetType().FullName);
             var stopwatch = Stopwatch.StartNew();
-            await dataSupplier.LoadRelevantData(stoppingToken);
+            await dataSupplier.LoadRelevantDataAsync(stoppingToken);
             _logger.LogInformation("Reloading Datasupplier {name} in {ms} ms", dataSupplier.GetType().FullName,
                 stopwatch.ElapsedMilliseconds);
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await LoadAllDataSuppliers(cancellationToken);
+            await LoadAllDataSuppliersAsync(cancellationToken);
 
             await base.StartAsync(cancellationToken);
         }
