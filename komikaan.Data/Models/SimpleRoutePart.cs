@@ -13,6 +13,6 @@ public class SimpleRoutePart
 
     public string PlannedArrivalTrack { get; set; }
     public string PlannedDepartureTrack { get; set; }
-    public string ActualArrivalTrack { get; set; }
-    public string ActualDepartureTrack { get; set; }
+    public string? ActualArrivalTrack { get; set; }
+    public string? ActualDepartureTrack { get; set; }
 }
