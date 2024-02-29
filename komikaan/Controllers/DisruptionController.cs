@@ -28,11 +28,11 @@ namespace komikaan.Controllers
 
             journeyResult.TravelAdvice = (await _dataSupplier.GetTravelAdvice(fromStop, toStop)).ToList();
 
-            if (journeyResult.Disruptions.Any() && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd.ToUniversalTime() > DateTime.UtcNow))
+            if (journeyResult.TravelAdvice.All(advice => advice.Route.Any(route => route.Cancelled)) && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd.ToUniversalTime() > DateTime.UtcNow))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (journeyResult.Disruptions.All(disruption => disruption.Type == DisruptionType.Maintenance) && journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
+            else if (journeyResult.Disruptions.All(disruption => disruption.Type != DisruptionType.Maintenance) || journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }
