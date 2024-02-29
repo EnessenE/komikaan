@@ -110,12 +110,12 @@ namespace komikaan.Context
             var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
             foreach (var trip in travelAdvice.trips)
             {
-                GenerateTravelAdvice(from, trip, simplifiedTravelAdvices);
+                simplifiedTravelAdvices.Add(GenerateTravelAdvice(from, trip));
             }
             return simplifiedTravelAdvices;
         }
 
-        private static void GenerateTravelAdvice(string from, Trip trip, List<SimpleTravelAdvice> simplifiedTravelAdvices)
+        private SimpleTravelAdvice GenerateTravelAdvice(string from, Trip trip)
         {
             var simpleTravelAdvice = new SimpleTravelAdvice();
             simpleTravelAdvice.Source = DataSource.NederlandseSpoorwegen;
@@ -123,7 +123,7 @@ namespace komikaan.Context
             simpleTravelAdvice.ActualDurationInMinutes = trip.actualDurationInMinutes;
             simpleTravelAdvice.Route = new List<SimpleRoutePart>();
 
-
+            //Add the first station manually
             simpleTravelAdvice.Route.Add(new SimpleRoutePart()
             {
                 Cancelled = false,
@@ -132,6 +132,7 @@ namespace komikaan.Context
                 PlannedArrival = null,
                 ActualArrival = null
             });
+
             var previous = simpleTravelAdvice.Route.First();
             Leg previousLeg = null;
             foreach (var leg in trip.legs)
@@ -167,7 +168,7 @@ namespace komikaan.Context
             }
 
 
-            simplifiedTravelAdvices.Add(simpleTravelAdvice);
+            return simpleTravelAdvice;
         }
     }
 }
