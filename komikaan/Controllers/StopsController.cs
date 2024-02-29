@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace komikaan.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("v1/[controller]")]
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
