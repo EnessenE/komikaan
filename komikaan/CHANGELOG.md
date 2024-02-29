@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add track data
 ### Changed
 - Change logic of the possibilities. If all are cancelled, then there is no chance
+- Pre-process disruption data for reduced latency on calls
 
 [1.2.3] - 28-02-2024
 ### Changed
