@@ -43,6 +43,17 @@ namespace komikaan.Services
             _logger.LogInformation("Finished reloading all data suppliers");
         }
 
+        private async Task StartAllDataSuppliersAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Starting data suppliers");
+            foreach (var dataSupplier in _dataSuppliers)
+            {
+                await LoadDataSupplierAsync(stoppingToken, dataSupplier);
+            }
+
+            _logger.LogInformation("Finished starting data suppliers");
+        }
+
         private async Task LoadDataSupplierAsync(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
         {
             _logger.LogInformation("Reloading Datasupplier {name}", dataSupplier.GetType().FullName);
@@ -54,8 +65,7 @@ namespace komikaan.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await LoadAllDataSuppliersAsync(cancellationToken);
-
+            await StartAllDataSuppliersAsync(cancellationToken);
             await base.StartAsync(cancellationToken);
         }
 

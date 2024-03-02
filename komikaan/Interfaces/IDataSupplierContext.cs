@@ -7,6 +7,7 @@ namespace komikaan.Interfaces;
 public interface IDataSupplierContext
 {
     DataSource Supplier { get; }
+    Task StartAsync(CancellationToken cancellationToken);
     Task LoadRelevantDataAsync(CancellationToken cancellationToken);
     Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to);
 

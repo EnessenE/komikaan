@@ -3,6 +3,7 @@ using komikaan.Enums;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Models.API.NS;
+using Refit;
 
 namespace komikaan.Context
 {
@@ -22,6 +23,11 @@ namespace komikaan.Context
             _logger = logger;
             _allDisruptions = new List<SimpleDisruption>();
             _allStations = new Dictionary<string, Station>();
+        }
+
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            await GetAllDataAsync();
         }
 
         public async Task LoadRelevantDataAsync(CancellationToken cancellationToken)
@@ -144,8 +150,16 @@ namespace komikaan.Context
 
         private async Task GetAllDataAsync()
         {
-            _allStations = await LoadAllStopsAsync();
-            _allDisruptions = await LoadAllDisruptionsAsync();
+            try
+            {
+                _allStations = await LoadAllStopsAsync();
+                _allDisruptions = await LoadAllDisruptionsAsync();
+            }
+            catch (ApiException apiException)
+            {
+                // A backoff should be implemented, for example Polly
+                _logger.LogError(apiException, "Failed to reload information");
+            }
         }
 
         private async Task<List<SimpleDisruption>> LoadAllDisruptionsAsync()
@@ -194,6 +208,7 @@ namespace komikaan.Context
             simpleDisruption.Descriptions = description;
             simpleDisruption.Advices = advices.SelectMany(advice => advice);
             simpleDisruption.ExpectedEnd = disruption.end;
+            simpleDisruption.Start = disruption.start;
             simpleDisruption.Active = disruption.isActive;
             simpleDisruption.AffectedStops = affectedStops;
             simpleDisruption.Source = Supplier;
