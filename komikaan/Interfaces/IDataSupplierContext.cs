@@ -7,9 +7,19 @@ namespace komikaan.Interfaces;
 public interface IDataSupplierContext
 {
     DataSource Supplier { get; }
-    Task LoadRelevantData(CancellationToken cancellationToken);
-    Task<IEnumerable<SimpleDisruption>> GetDisruptions(string from, string to);
+    Task StartAsync(CancellationToken cancellationToken);
+    Task LoadRelevantDataAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Responsible for finding all relevant disruptions on the route
+    /// </summary>
+    /// <param name="from">Departure station</param>
+    /// <param name="to">Arrival station</param>
+    /// <returns>A list of disruptions that are active and affect the stations and the route inbetween</returns>
+    Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to);
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1564:Parameter in public or internal member is of type bool or bool?", Justification = "We are selecting data for active / inactive disruptions. This is intended")]
     Task<IEnumerable<SimpleDisruption>> GetAllDisruptions(bool active);
     Task<IDictionary<string, Station>> GetAllStops();
-    Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdvice(string from, string to);
+    Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to);
 }
