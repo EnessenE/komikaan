@@ -18,7 +18,7 @@ namespace komikaan.Controllers
 
 
         [HttpGet()]
-        public async Task<IEnumerable<string>> GetStops()
+        public async Task<IEnumerable<string>> GetStopsAsync()
         {
             var data = await _dataSupplier.GetAllStops();
             return data.Keys;
@@ -29,7 +29,7 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<string>> SearchStops(string filter)
+        public async Task<IEnumerable<string>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
             var data = await _dataSupplier.GetAllStops();
