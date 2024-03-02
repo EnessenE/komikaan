@@ -48,11 +48,20 @@ namespace komikaan.Services
             _logger.LogInformation("Starting data suppliers");
             foreach (var dataSupplier in _dataSuppliers)
             {
-                await LoadDataSupplierAsync(stoppingToken, dataSupplier);
+                await StartDataSupplierAsync(stoppingToken, dataSupplier);
             }
 
             _logger.LogInformation("Finished starting data suppliers");
         }
+        private async Task StartDataSupplierAsync(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
+        {
+            _logger.LogInformation("Starting Datasupplier {name}", dataSupplier.GetType().FullName);
+            var stopwatch = Stopwatch.StartNew();
+            await dataSupplier.StartAsync(stoppingToken);
+            _logger.LogInformation("Started Datasupplier {name} in {ms} ms", dataSupplier.GetType().FullName,
+                stopwatch.ElapsedMilliseconds);
+        }
+
 
         private async Task LoadDataSupplierAsync(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
         {

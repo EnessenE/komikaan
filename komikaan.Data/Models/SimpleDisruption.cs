@@ -19,9 +19,3 @@ public class SimpleDisruption
     public bool Active { get; set; }
     public List<string> AffectedStops { get; set; }
 }
-
-public enum DisruptionStage
-{
-    Finished,
-    Ongoing
-}

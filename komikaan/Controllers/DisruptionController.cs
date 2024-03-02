@@ -39,7 +39,7 @@ namespace komikaan.Controllers
 
         private static void CalculateExpectation(JourneyResult journeyResult)
         {
-            if (journeyResult.TravelAdvice.All(advice => advice.Route.Any(route => route.Cancelled)) && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15)))
+            if (journeyResult.TravelAdvice.All(advice => advice.Route.Any(route => route.Cancelled)) && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15)))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
