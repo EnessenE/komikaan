@@ -43,13 +43,8 @@ namespace komikaan.Tests.Tests
             {
                 PlannedDeparture = DateTime.UtcNow,
                 Cancelled = false,
-                Name = stationName1
-            });
-            routes.Add(new SimpleRoutePart()
-            {
-                PlannedDeparture = DateTime.UtcNow,
-                Cancelled = false,
-                Name = stationName2
+                DepartureStation = stationName1,
+                ArrivalStation = stationName2
             });
 
             _stubContext.Add(new SimpleDisruption() { Active = true });

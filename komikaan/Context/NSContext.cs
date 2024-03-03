@@ -1,8 +1,10 @@
-﻿using komikaan.Data.Enums;
+﻿using komikaan.Data.Configuration;
+using komikaan.Data.Enums;
 using komikaan.Enums;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Models.API.NS;
+using Microsoft.Extensions.Options;
 using Refit;
 
 namespace komikaan.Context
@@ -14,13 +16,15 @@ namespace komikaan.Context
 
         private List<SimpleDisruption> _allDisruptions;
         private IDictionary<string, Station> _allStations;
+        private readonly Dictionary<string, LegType> _mappings;
 
         public DataSource Supplier { get; } = DataSource.NederlandseSpoorwegen;
 
-        public NSContext(INSApi nsApi, ILogger<NSContext> logger)
+        public NSContext(INSApi nsApi, ILogger<NSContext> logger, IOptions<SupplierConfigurations> supplierMappingConfiguration)
         {
             _nsApi = nsApi;
             _logger = logger;
+            _mappings = supplierMappingConfiguration.Value.Mappings[Supplier];
             _allDisruptions = new List<SimpleDisruption>();
             _allStations = new Dictionary<string, Station>();
         }
@@ -78,18 +82,7 @@ namespace komikaan.Context
             simpleTravelAdvice.Source = DataSource.NederlandseSpoorwegen;
             simpleTravelAdvice.PlannedDurationInMinutes = trip.plannedDurationInMinutes;
             simpleTravelAdvice.ActualDurationInMinutes = trip.actualDurationInMinutes;
-            simpleTravelAdvice.Route = new List<SimpleRoutePart>
-            {
-                //Add the first station manually
-                new SimpleRoutePart()
-                {
-                    Cancelled = false,
-                    Name = from,
-                    RealisticTransfer = true,
-                    PlannedArrival = null,
-                    ActualArrival = null
-                }
-            };
+            simpleTravelAdvice.Route = new List<SimpleRoutePart>();
 
             CalculateLegs(trip, simpleTravelAdvice);
 
@@ -97,54 +90,43 @@ namespace komikaan.Context
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "Collection of leg data, splitting this causes arguably more confusion in the current form")]
-        private static void CalculateLegs(Trip trip, SimpleTravelAdvice simpleTravelAdvice)
+        private void CalculateLegs(Trip trip, SimpleTravelAdvice simpleTravelAdvice)
         {
-            // We see these objects different then the NS. We look at it per station as thats in our interest
-            // While the NS looks at it per leg, so sometimes we have to look at the previous item to look forward
-            var previous = simpleTravelAdvice.Route.First();
-            Leg? previousLeg = null;
 
             foreach (var leg in trip.legs)
             {
                 var routePart = new SimpleRoutePart();
 
-                routePart.Name = leg.destination.name;
+                routePart.ArrivalStation = leg.destination.name;
+                routePart.DepartureStation = leg.origin.name;
+
+                if (_mappings.TryGetValue(leg.product.shortCategoryName, out var foundType))
+                {
+                    routePart.Type = foundType;
+                }
+                else
+                {
+                    routePart.Type = LegType.Unknown;
+                }
 
                 routePart.Cancelled = leg.partCancelled || leg.cancelled;
                 routePart.AlternativeTransport = leg.alternativeTransport;
 
-                previous.PlannedDeparture = leg.origin.plannedDateTime;
-                previous.ActualDeparture = leg.origin.actualDateTime;
+                routePart.PlannedDeparture = leg.origin.plannedDateTime;
+                routePart.ActualDeparture = leg.origin.actualDateTime;
 
-                previous.PlannedDepartureTrack = leg.origin.plannedTrack;
-                previous.ActualDepartureTrack = leg.origin.actualTrack;
+                routePart.PlannedDepartureTrack = leg.origin.plannedTrack;
+                routePart.ActualDepartureTrack = leg.origin.actualTrack;
 
-                if (previousLeg != null)
-                {
-                    previous.PlannedArrival = previousLeg.destination.plannedDateTime;
-                    previous.ActualArrival = previousLeg.destination.actualDateTime;
+                routePart.PlannedArrival = leg.destination.plannedDateTime;
+                routePart.ActualArrival = leg.destination.actualDateTime;
 
-                    previous.PlannedArrivalTrack = previousLeg.destination.plannedTrack;
-                    previous.ActualArrivalTrack = previousLeg.destination.actualTrack;
+                routePart.PlannedArrivalTrack = leg.destination.plannedTrack;
+                routePart.ActualArrivalTrack = leg.destination.actualTrack;
 
-                    previous.RealisticTransfer = previousLeg.changePossible;
-                }
+                routePart.RealisticTransfer = leg.changePossible;
 
-                previous = routePart;
-                previousLeg = leg;
                 simpleTravelAdvice.Route.Add(routePart);
-            }
-
-            // To standardize data to our format
-            if (previousLeg != null)
-            {
-                previous.PlannedArrival = previousLeg.destination.plannedDateTime;
-                previous.ActualArrival = previousLeg.destination.actualDateTime;
-
-                previous.PlannedArrivalTrack = previousLeg.destination.plannedTrack;
-                previous.ActualArrivalTrack = previousLeg.destination.actualTrack;
-
-                previous.RealisticTransfer = true;
             }
         }
 
@@ -213,6 +195,7 @@ namespace komikaan.Context
             simpleDisruption.AffectedStops = affectedStops;
             simpleDisruption.Source = Supplier;
             simpleDisruption.Type = disruptionType;
+
             return simpleDisruption;
         }
 
