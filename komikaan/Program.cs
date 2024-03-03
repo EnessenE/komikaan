@@ -1,10 +1,11 @@
-using komikaan.Context;
+﻿using komikaan.Context;
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Services;
 using Refit;
 using Serilog;
 using System.Reflection;
+using komikaan.Data.Configuration;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "I dont like top levels, will receive a reformat ever.")]
 internal class Program
@@ -32,6 +33,7 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.Configure<SupplierConfigurations>(builder.Configuration.GetSection("SupplierMappings"));
 
         builder.Services.AddCors(options =>
         {
@@ -55,7 +57,7 @@ internal class Program
         IHttpClientBuilder refitClientBuilder = builder.Services.AddRefitClient<INSApi>(refitSettings)
             .ConfigureHttpClient(httpClient =>
             {
-                httpClient.BaseAddress = new Uri("https://gateway.apiportal.ns.nl");
+                httpClient.BaseAddress = new Uri(builder.Configuration.GetValue<string>("NSApiUrl")!);
                 httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", builder.Configuration.GetValue<string>("ns_api_key"));
                 // Will throw `TaskCanceledException` if the request goes longer than 3 seconds.
                 httpClient.Timeout = TimeSpan.FromSeconds(10);

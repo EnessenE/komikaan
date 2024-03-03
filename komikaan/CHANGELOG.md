@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[1.5.0] - 03-03-2024
+### Added
+- Added support for new LegType
+- Added support for Mapping from a DataSource to the legtype
+### Changed
+- SimpleRoutePart goes from representing a Station to representing a leg of the journey
+
 [1.4.0] - 02-03-2024
 ### Added
 - Catch API Exceptions from NS

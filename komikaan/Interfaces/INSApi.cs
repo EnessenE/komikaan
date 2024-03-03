@@ -5,7 +5,7 @@ namespace komikaan.Interfaces
 {
     public interface INSApi
     {
-        [Get("/reisinformatie-api/api/v3/disruptions")]
+        [Get("/disruptions/v3")]
         Task<List<Disruption>> GetAllDisruptions();
 
         [Get("/reisinformatie-api/api/v2/stations")]
