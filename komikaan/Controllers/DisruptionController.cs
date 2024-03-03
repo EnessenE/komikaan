@@ -10,20 +10,26 @@ namespace komikaan.Controllers
     public class DisruptionController : ControllerBase
     {
         private readonly ILogger<DisruptionController> _logger;
-        private readonly IDataSupplierContext _dataSupplier;
+        private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
 
-        public DisruptionController(ILogger<DisruptionController> logger, IDataSupplierContext dataSupplier)
+        public DisruptionController(ILogger<DisruptionController> logger, IEnumerable<IDataSupplierContext> dataSuppliers)
         {
             _logger = logger;
-            _dataSupplier = dataSupplier;
+            _dataSuppliers = dataSuppliers;
         }
 
         [HttpGet("{fromStop}/{toStop}")]
         public async Task<JourneyResult> GetTravelExpectationAsync(string fromStop, string toStop)
         {
             _logger.LogInformation("Calculating trip from {from} > {to}", fromStop, toStop);
-            var disruptions = await _dataSupplier.GetDisruptionsAsync(fromStop, toStop);
-            var travelAdvice = await _dataSupplier.GetTravelAdviceAsync(fromStop, toStop);
+            var travelAdvice = new List<SimpleTravelAdvice>();
+            var disruptions = new List<SimpleDisruption>();
+
+            foreach (var supplier in _dataSuppliers)
+            {
+                disruptions.AddRange(await supplier.GetDisruptionsAsync(fromStop, toStop));
+                travelAdvice.AddRange(await supplier.GetTravelAdviceAsync(fromStop, toStop));
+            }
 
             var journeyResult = new JourneyResult
             {

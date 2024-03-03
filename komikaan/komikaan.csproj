@@ -8,7 +8,7 @@
     <UserSecretsId>e4e92886-a5e4-4798-967e-714b8d37eec3</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <Version>1.5.1</Version>
+    <Version>1.6.0-prerelease</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,6 +30,7 @@
     <PackageReference Include="Refit.Newtonsoft.Json" Version="7.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="GTFS" Version="3.0.0-pre006" />
   </ItemGroup>
 
   <ItemGroup>

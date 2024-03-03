@@ -1,5 +1,6 @@
 ﻿using komikaan.Data.Configuration;
 using komikaan.Data.Enums;
+using komikaan.Data.Models;
 using komikaan.Enums;
 using komikaan.Interfaces;
 using komikaan.Models;
@@ -15,7 +16,7 @@ namespace komikaan.Context
         private readonly ILogger<NSContext> _logger;
 
         private List<SimpleDisruption> _allDisruptions;
-        private IDictionary<string, Station> _allStations;
+        private IDictionary<string, SimplifiedStop> _allStops;
         private readonly Dictionary<string, LegType> _mappings;
 
         public DataSource Supplier { get; } = DataSource.NederlandseSpoorwegen;
@@ -26,7 +27,7 @@ namespace komikaan.Context
             _logger = logger;
             _mappings = supplierMappingConfiguration.Value.Mappings[Supplier];
             _allDisruptions = new List<SimpleDisruption>();
-            _allStations = new Dictionary<string, Station>();
+            _allStops = new Dictionary<string, SimplifiedStop>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -41,10 +42,11 @@ namespace komikaan.Context
 
         public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to)
         {
-            var fromStop = _allStations[from];
-            var toStop = _allStations[to];
+            var fromStop = _allStops[from];
+            var toStop = _allStops[to];
 
-            var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops.Any(stop => stop.Equals(fromStop.code, StringComparison.InvariantCultureIgnoreCase) || stop.Equals(toStop.code, StringComparison.InvariantCultureIgnoreCase)));
+            //TODO: Specific per set
+            var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops.Any(stop => stop.Equals(fromStop.Id.First(), StringComparison.InvariantCultureIgnoreCase) || stop.Equals(toStop.Id.First(), StringComparison.InvariantCultureIgnoreCase)));
             relevantDisruptions = relevantDisruptions.ToList().FindAll(disruption => disruption.Active);
 
             return Task.FromResult(relevantDisruptions);
@@ -56,17 +58,17 @@ namespace komikaan.Context
             return Task.FromResult(disruptions);
         }
 
-        public Task<IDictionary<string, Station>> GetAllStops()
+        public Task<IEnumerable<SimplifiedStop>> GetAllStops()
         {
-            return Task.FromResult(_allStations);
+            return Task.FromResult(_allStops.Values.AsEnumerable());
         }
 
         public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
         {
-            var fromStop = _allStations[from];
-            var toStop = _allStations[to];
-
-            var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.code, toStop.code);
+            var fromStop = _allStops[from];
+            var toStop = _allStops[to];
+            //TODO: Get specific ids for specific sets
+            var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Id.First(), toStop.Id.First());
             var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
             foreach (var trip in travelAdvice.trips)
             {
@@ -134,7 +136,7 @@ namespace komikaan.Context
         {
             try
             {
-                _allStations = await LoadAllStopsAsync();
+                _allStops = await LoadAllStopsAsync();
                 _allDisruptions = await LoadAllDisruptionsAsync();
             }
             catch (ApiException apiException)
@@ -158,13 +160,18 @@ namespace komikaan.Context
             return data;
         }
 
-        private async Task<Dictionary<string, Station>> LoadAllStopsAsync()
+        private async Task<Dictionary<string, SimplifiedStop>> LoadAllStopsAsync()
         {
             var stationRoot = await _nsApi.GetAllStations();
-            var dict = new Dictionary<string, Station>();
+            var dict = new Dictionary<string, SimplifiedStop>();
             foreach (var station in stationRoot.payload)
             {
-                dict.Add(station.namen.lang, station);
+                var simpleStop = new SimplifiedStop()
+                {
+                    Id = new List<string>() {station.code},
+                    Name = station.namen.lang
+                };
+                dict.Add(station.namen.lang, simpleStop);
             }
 
             return dict;

@@ -1,4 +1,5 @@
 ﻿using komikaan.Data.Enums;
+using komikaan.Data.Models;
 using komikaan.Models;
 using komikaan.Models.API.NS;
 
@@ -20,6 +21,6 @@ public interface IDataSupplierContext
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1564:Parameter in public or internal member is of type bool or bool?", Justification = "We are selecting data for active / inactive disruptions. This is intended")]
     Task<IEnumerable<SimpleDisruption>> GetAllDisruptions(bool active);
-    Task<IDictionary<string, Station>> GetAllStops();
+    Task<IEnumerable<SimplifiedStop>> GetAllStops();
     Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to);
 }

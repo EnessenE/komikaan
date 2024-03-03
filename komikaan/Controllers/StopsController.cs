@@ -1,3 +1,4 @@
+﻿using komikaan.Data.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,20 +9,27 @@ namespace komikaan.Controllers
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
-        private readonly IDataSupplierContext _dataSupplier;
+        private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
 
-        public StopsController(ILogger<StopsController> logger, IDataSupplierContext dataSupplier)
+        public StopsController(ILogger<StopsController> logger, IEnumerable<IDataSupplierContext> dataSuppliers)
         {
             _logger = logger;
-            _dataSupplier = dataSupplier;
+            _dataSuppliers = dataSuppliers;
         }
 
 
         [HttpGet()]
         public async Task<IEnumerable<string>> GetStopsAsync()
         {
-            var data = await _dataSupplier.GetAllStops();
-            return data.Keys;
+            var stops = new List<SimplifiedStop>();
+
+            foreach (var supplier in _dataSuppliers)
+            {
+                var data = await supplier.GetAllStops();
+                stops.AddRange(data);
+            }
+
+            return stops.Select(stop => stop.Name);
         }
 
         /// <summary>
@@ -29,19 +37,24 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<string>> SearchStopsAsync(string filter)
+        public async Task<IEnumerable<SimplifiedStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
-            var data = await _dataSupplier.GetAllStops();
-            var names = data.Keys.ToList();
-            var foundResults = names.Where(name => name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            var stops = new List<SimplifiedStop>();
 
-            if (foundResults.Any())
+            foreach (var supplier in _dataSuppliers)
             {
-                foundResults = foundResults.Chunk(10).First().ToList();
+                var data = await supplier.GetAllStops();
+                stops.AddRange(data);
+            }
+            var foundStops = stops.Where(stop => stop.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
+
+            foreach (var found in foundStops)
+            {
+                _logger.LogInformation("Found {id} {name}", found.Id, found.Name);
             }
 
-            return foundResults;
+            return foundStops;
         }
     }
 }
