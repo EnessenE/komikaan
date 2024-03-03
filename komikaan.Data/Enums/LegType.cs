@@ -7,6 +7,7 @@ namespace komikaan.Data.Enums
     {
         Unknown,
         Train,
+        RegionalTrain,
         InternationalTrain,
         Bus,
         Feet,
