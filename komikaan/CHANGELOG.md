@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[1.5.1] - 03-03-2024
+### Added
+- NS Mappings for Bus and Eurostar
+### Changed
+- Train LegType has been split into RegionalTrain and Train
+
 [1.5.0] - 03-03-2024
 ### Added
 - Added support for new LegType
