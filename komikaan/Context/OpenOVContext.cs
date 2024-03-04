@@ -1,15 +1,17 @@
 ﻿using GTFS;
 using GTFS.Entities;
-using GTFS.IO;
 using komikaan.Data.Enums;
 using komikaan.Data.Models;
 using komikaan.Interfaces;
 using komikaan.Models;
-using komikaan.Models.API.NS;
+using Stop = GTFS.Entities.Stop;
 using Trip = GTFS.Entities.Trip;
 
 namespace komikaan.Context
 {
+    //Random code to mess around with GTFS data
+    // Very inefficient and not-prod ready
+    // Essentially brute forcing to have fun
     public class OpenOVContext : IDataSupplierContext
     {
         private ILogger<OpenOVContext> _logger;
@@ -17,6 +19,7 @@ namespace komikaan.Context
 
         private IList<SimpleStop> _stops;
         private IDictionary<string, Trip> _trips;
+        private IDictionary<string, Stop> _gtfsStops;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
         public OpenOVContext(ILogger<OpenOVContext> logger)
@@ -24,6 +27,7 @@ namespace komikaan.Context
             _logger = logger;
             _stops = new List<SimpleStop>();
             _trips = new Dictionary<string, Trip>();
+            _gtfsStops = new Dictionary<string, Stop>();
         }
 
         public DataSource Supplier { get; } = DataSource.OpenOV;
@@ -38,10 +42,10 @@ namespace komikaan.Context
             _logger.LogInformation("Finished reading GTFS data");
 
             GenerateStops();
-            _logger.LogInformation("Finished generating stops");
+            _logger.LogInformation("Finished generating {simpleStops}/{gtfsStops} stops", _stops.Count, _gtfsStops.Count);
 
             GenerateTrips();
-            _logger.LogInformation("Finished generating trips");
+            _logger.LogInformation("Finished generating {trips} trips", _trips.Count);
 
             return Task.CompletedTask;
         }
@@ -59,6 +63,7 @@ namespace komikaan.Context
         {
             foreach (var stop in _feed.Stops)
             {
+                _gtfsStops.Add(stop.Id, stop);
                 var simpleStop = new SimpleStop();
                 var existingStop =
                     _stops.FirstOrDefault(existingStop => existingStop.Name.Equals(stop.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -110,14 +115,16 @@ namespace komikaan.Context
         {
             var simpleFromStop = _stops.First(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
             var simpleToStop = _stops.First(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
-            var fromStop = _feed.Stops.Get(simpleFromStop.Ids[Supplier].First());
-
             _logger.LogInformation("Found a stop");
+            var stopTimes = new List<StopTime>();
 
-            var stopTimes = _feed.StopTimes.Where(stopTime => stopTime.StopId.Equals(fromStop.Id, StringComparison.InvariantCultureIgnoreCase));
+            foreach (var id in simpleFromStop.Ids[Supplier])
+            {
+                stopTimes.AddRange(_feed.StopTimes.Where(stopTime => stopTime.StopId.Equals(id, StringComparison.InvariantCultureIgnoreCase)));
+            }
             _logger.LogInformation("Found {count} stopTimes", stopTimes.Count());
 
-            stopTimes = stopTimes.Where(stopTime => stopTime.DepartureTime >= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(-1)) || stopTime.DepartureTime <= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(35)));
+            stopTimes = stopTimes.Where(stopTime => stopTime.DepartureTime >= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(-1)) && stopTime.DepartureTime <= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(35))).ToList();
             _logger.LogInformation("Found filtered {count} stopTimes", stopTimes.Count());
 
             var advices = new List<SimpleTravelAdvice>();
@@ -138,19 +145,31 @@ namespace komikaan.Context
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
         private SimpleTravelAdvice GenerateTravelAdvice(StopTime stopTime, Trip trip)
         {
+            var stop = _gtfsStops[stopTime.StopId];
             var simpleTravelAdvice = new SimpleTravelAdvice();
             simpleTravelAdvice.ActualDurationInMinutes = 999;
             simpleTravelAdvice.PlannedDurationInMinutes = 999;
             simpleTravelAdvice.Source = Supplier;
             simpleTravelAdvice.Route = new List<SimpleRoutePart>();
+
             var routePart = new SimpleRoutePart();
             routePart.Type = LegType.Unknown;
-            routePart.ArrivalStation = trip.Headsign;
+            routePart.ArrivalStation = "who knows";
             routePart.PlannedDeparture = ToDateTime(stopTime.DepartureTime!.Value);
             routePart.PlannedArrival = ToDateTime(stopTime.ArrivalTime!.Value);
-            routePart.PlannedArrivalTrack = trip.ShortName;
-            routePart.PlannedDepartureTrack = stopTime.ToString();
+            routePart.PlannedArrivalTrack = "??";
+            routePart.PlannedDepartureTrack = stop.PlatformCode;
+            routePart.DepartureStation = stop.Name;
+            routePart.RealisticTransfer = true;
+            routePart.LineName = trip.ShortName;
+            routePart.Direction = trip.Headsign;
+            var route = _feed.Routes.First(route => route.Id.Equals(trip.RouteId));
+            routePart.LineName = route.ShortName; 
+            var agency = _feed.Agencies.First(agency => agency.Id == route.AgencyId);
+            routePart.Operator = agency.Name;
+            
             simpleTravelAdvice.Route.Add(routePart);
+            
             return simpleTravelAdvice;
         }
 
