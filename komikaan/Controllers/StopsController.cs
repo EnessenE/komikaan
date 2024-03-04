@@ -9,27 +9,21 @@ namespace komikaan.Controllers
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
-        private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
+        private readonly IStopManagerService _stopManager;
 
-        public StopsController(ILogger<StopsController> logger, IEnumerable<IDataSupplierContext> dataSuppliers)
+        public StopsController(ILogger<StopsController> logger, IStopManagerService stopManager)
         {
             _logger = logger;
-            _dataSuppliers = dataSuppliers;
+            _stopManager = stopManager;
         }
 
 
         [HttpGet()]
-        public async Task<IEnumerable<string>> GetStopsAsync()
+        public async Task<IEnumerable<SimpleStop>> GetStopsAsync()
         {
-            var stops = new List<SimplifiedStop>();
+            var stops = await _stopManager.GetAllStopsAsync();
 
-            foreach (var supplier in _dataSuppliers)
-            {
-                var data = await supplier.GetAllStops();
-                stops.AddRange(data);
-            }
-
-            return stops.Select(stop => stop.Name);
+            return stops;
         }
 
         /// <summary>
@@ -37,21 +31,16 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<SimplifiedStop>> SearchStopsAsync(string filter)
+        public async Task<IEnumerable<SimpleStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
-            var stops = new List<SimplifiedStop>();
+            var stops = await _stopManager.GetAllStopsAsync();
 
-            foreach (var supplier in _dataSuppliers)
-            {
-                var data = await supplier.GetAllStops();
-                stops.AddRange(data);
-            }
             var foundStops = stops.Where(stop => stop.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
 
             foreach (var found in foundStops)
             {
-                _logger.LogInformation("Found {id} {name}", found.Id, found.Name);
+                _logger.LogInformation("Found {id} {name}", found.Ids, found.Name);
             }
 
             return foundStops;

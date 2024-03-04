@@ -31,6 +31,7 @@ namespace komikaan.Controllers
                 travelAdvice.AddRange(await supplier.GetTravelAdviceAsync(fromStop, toStop));
             }
 
+            travelAdvice.OrderBy(advice => advice.Route.First().PlannedDeparture);
             var journeyResult = new JourneyResult
             {
                 Disruptions = disruptions.ToList(),

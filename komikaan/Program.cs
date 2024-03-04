@@ -68,6 +68,7 @@ internal class Program
         refitClientBuilder.Services.AddSingleton<HttpLoggingHandler>();
         AddDataSuppliers(builder);
         builder.Services.AddHostedService<DataService>();
+        builder.Services.AddSingleton<IStopManagerService, StopManagerService>();
 
 
         SetupApplication(builder, corsName);

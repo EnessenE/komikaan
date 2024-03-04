@@ -20,7 +20,7 @@ public interface IDataSupplierContext
     Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to);
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1564:Parameter in public or internal member is of type bool or bool?", Justification = "We are selecting data for active / inactive disruptions. This is intended")]
-    Task<IEnumerable<SimpleDisruption>> GetAllDisruptions(bool active);
-    Task<IEnumerable<SimplifiedStop>> GetAllStops();
+    Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active);
+    Task<IEnumerable<SimpleStop>> GetAllStopsAsync();
     Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to);
 }

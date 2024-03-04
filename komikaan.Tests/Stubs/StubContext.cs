@@ -53,7 +53,7 @@ namespace komikaan.Tests.Stubs
             return Task.FromResult(_disruptions.AsEnumerable());
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptions(bool active)
+        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active)
         {
             return Task.FromResult(_disruptions.AsEnumerable());
         }
