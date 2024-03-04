@@ -32,6 +32,14 @@ namespace komikaan.Controllers
             }
 
             travelAdvice.OrderBy(advice => advice.Route.First().PlannedDeparture);
+            var journeyResult = GenerateJourneyResult(disruptions, travelAdvice);
+            _logger.LogInformation("Calculated trip from {from} > {to}", fromStop, toStop);
+
+            return journeyResult;
+        }
+
+        private static JourneyResult GenerateJourneyResult(List<SimpleDisruption> disruptions, List<SimpleTravelAdvice> travelAdvice)
+        {
             var journeyResult = new JourneyResult
             {
                 Disruptions = disruptions.ToList(),
@@ -39,8 +47,6 @@ namespace komikaan.Controllers
             };
 
             CalculateExpectation(journeyResult);
-            _logger.LogInformation("Calculated trip from {from} > {to}", fromStop, toStop);
-
             return journeyResult;
         }
 
