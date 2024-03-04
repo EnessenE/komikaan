@@ -124,6 +124,10 @@ namespace komikaan.Context
                     routePart.Type = LegType.Unknown;
                 }
 
+                routePart.Direction = leg.direction;
+                routePart.LineName = leg.name;
+                routePart.Operator = leg.product.operatorName;
+
                 routePart.Cancelled = leg.partCancelled || leg.cancelled;
                 routePart.AlternativeTransport = leg.alternativeTransport;
 
@@ -215,7 +219,7 @@ namespace komikaan.Context
             simpleDisruption.AffectedStops = affectedStops;
             simpleDisruption.Source = Supplier;
             simpleDisruption.Type = disruptionType;
-
+            
             return simpleDisruption;
         }
 
