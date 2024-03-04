@@ -1,5 +1,4 @@
 ﻿using GTFS;
-using GTFS.IO;
 
 namespace komikaan.Tests.Tests
 {
@@ -16,17 +15,17 @@ namespace komikaan.Tests.Tests
         [TestMethod]
         public void Test()
         {
-            string path = "C:\\Users\\maile\\Downloads\\gtfs-nl";
+            string path = "C:\\Users\\maile\\Downloads\\gtfs-nl.zip";
 
             var reader = new GTFSReader<GTFSFeed>();
             var feed = reader.Read(path);
 
+
             foreach (var agency in feed.Agencies)
             {
-                Console.WriteLine($"{agency.Name} - {agency.LanguageCode}");
+                Console.WriteLine(agency.Name);
             }
-
-
+            Console.WriteLine($"Found a feed with {feed.Agencies.Count} agencies");
         }
     }
 }
