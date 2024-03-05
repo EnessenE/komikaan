@@ -61,22 +61,35 @@
 
     public class Disruption
     {
+        /// <summary>
+        /// Can be a GUID, can be a number. Depends on the type of disruption
+        /// Calamities have GUIDS, normal maintenance has id's for example at the time of writing
+        /// </summary>
         public string id { get; set; }
-        public object titleSections { get; set; }
+        public object? titleSections { get; set; }
         public bool isActive { get; set; }
+        /// <summary>
+        /// NS may sometimes provide additional info in a URL
+        /// For example disasters or strikes
+        /// </summary>
+        public string? url { get; set; }
         public string title { get; set; }
         public string type { get; set; }
+        /// <summary>
+        /// Only provided for some calamities
+        /// </summary>
+        public string? description { get; set; }
         public DateTime registrationTime { get; set; }
         public DateTime releaseTime { get; set; }
         public bool local { get; set; }
         public DateTime start { get; set; }
         public DateTime end { get; set; }
-        public string period { get; set; }
-        public Impact impact { get; set; }
-        public List<PublicationSection> publicationSections { get; set; }
-        public List<NSTimespan> timespans { get; set; }
-        public List<AlternativeTransportTimespan> alternativeTransportTimespans { get; set; }
-        public SummaryAdditionalTravelTime summaryAdditionalTravelTime { get; set; }
+        public string? period { get; set; }
+        public Impact? impact { get; set; }
+        public List<PublicationSection>? publicationSections { get; set; }
+        public List<NSTimespan>? timespans { get; set; }
+        public List<AlternativeTransportTimespan>? alternativeTransportTimespans { get; set; }
+        public SummaryAdditionalTravelTime? summaryAdditionalTravelTime { get; set; }
     }
 
     public class Section

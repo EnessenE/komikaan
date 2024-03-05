@@ -15,7 +15,7 @@ public class SimpleDisruption
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public DisruptionType Type { get; set; }
     public DisruptionStage Stage { get; set; }
-    public IEnumerable<string> Advices { get; set; }
+    public IEnumerable<string>? Advices { get; set; }
     public bool Active { get; set; }
     public List<string> AffectedStops { get; set; }
 }
