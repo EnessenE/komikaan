@@ -125,6 +125,7 @@ namespace komikaan.Context
             _logger.LogInformation("Found {count} stopTimes", stopTimes.Count());
 
             stopTimes = stopTimes.Where(stopTime => stopTime.DepartureTime >= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(-1)) && stopTime.DepartureTime <= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(35))).ToList();
+
             _logger.LogInformation("Found filtered {count} stopTimes", stopTimes.Count());
 
             var advices = new List<SimpleTravelAdvice>();
@@ -132,12 +133,19 @@ namespace komikaan.Context
             {
                 _logger.LogInformation("Processing a stoptime");
                 var trip = _trips[stopTime.TripId];
+                var calender = DateTime.UtcNow.CreateCalendar(trip.ServiceId);
+                //Covers date doesn't check start/end date.
+                if (calender.StartDate.ToUniversalTime() >= DateTime.UtcNow && calender.EndDate.ToUniversalTime() <= DateTime.UtcNow && calender.CoversDate(DateTime.UtcNow))
+                {
+                    var simpleTravelAdvice = GenerateTravelAdvice(stopTime, trip);
 
-                var simpleTravelAdvice = GenerateTravelAdvice(stopTime, trip);
-
-                advices.Add(simpleTravelAdvice);
+                    advices.Add(simpleTravelAdvice);
+                }
+                else
+                {
+                    _logger.LogInformation("{trip}, is not covered today", trip);
+                }
             }
-
 
             return Task.FromResult(advices.AsEnumerable());
 
