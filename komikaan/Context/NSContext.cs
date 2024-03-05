@@ -203,6 +203,7 @@ namespace komikaan.Context
             simpleDisruption.ExpectedEnd = disruption.end;
             simpleDisruption.Start = disruption.start;
             simpleDisruption.Active = disruption.isActive;
+            simpleDisruption.Url = disruption.url;
             // If stops are missing, assume it applies to every station
             // While bad, we miss data to properly argue where it should apply.
             simpleDisruption.AffectedStops = affectedStops ?? _allStations.Values.Select(station => station.code).ToList();
