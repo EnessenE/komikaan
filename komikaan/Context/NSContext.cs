@@ -199,24 +199,38 @@ namespace komikaan.Context
         {
             _logger.LogInformation("Loading: {name}, active {act}", disruption.title, disruption.isActive);
 
-            var situation = disruption.timespans.Select(timespan => timespan.situation);
-            var advices = disruption.timespans.Select(timespan => timespan.advices);
-            var affectedStops = disruption.publicationSections.SelectMany(section => section.section.stations.Select(disruptionStation => disruptionStation.stationCode)).ToList();
-            var description = situation.Select(situation => situation.label);
+            var advices = disruption.timespans?.Select(timespan => timespan.advices);
+            var affectedStops = disruption.publicationSections?.SelectMany(section => section.section.stations.Select(disruptionStation => disruptionStation.stationCode)).ToList();
+            var situation = disruption.timespans?.Select(timespan => timespan.situation);
+            var description = new List<string>();
             if (!Enum.TryParse(disruption.type, true, out DisruptionType disruptionType))
             {
                 //Incase new disruption types are introduced
                 disruptionType = DisruptionType.Unknown;
             }
 
+            if (!string.IsNullOrWhiteSpace(disruption.description))
+            {
+                description.Add(disruption.description);
+            }
+
+            if (situation != null)
+            {
+                description.AddRange(situation.Select(situation => situation.label));
+            }
+
+
             var simpleDisruption = new SimpleDisruption();
             simpleDisruption.Title = disruption.title;
             simpleDisruption.Descriptions = description;
-            simpleDisruption.Advices = advices.SelectMany(advice => advice);
+            simpleDisruption.Advices = advices?.SelectMany(advice => advice) ?? Enumerable.Empty<string>();
             simpleDisruption.ExpectedEnd = disruption.end;
             simpleDisruption.Start = disruption.start;
             simpleDisruption.Active = disruption.isActive;
-            simpleDisruption.AffectedStops = affectedStops;
+            simpleDisruption.Url = disruption.url;
+            // If stops are missing, assume it applies to every station
+            // While bad, we miss data to properly argue where it should apply.
+            simpleDisruption.AffectedStops = affectedStops ?? _allStations.Values.Select(station => station.code).ToList();
             simpleDisruption.Source = Supplier;
             simpleDisruption.Type = disruptionType;
             
