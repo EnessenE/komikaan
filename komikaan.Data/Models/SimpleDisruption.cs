@@ -9,7 +9,7 @@ public class SimpleDisruption
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public DataSource Source { get; set; }
     public string Title { get; set; }
-    public DateTime Start { get; set; }
+    public DateTime? Start { get; set; }
     public DateTime? ExpectedEnd { get; set; }
     public IEnumerable<string> Descriptions { get; set; }
 

@@ -82,8 +82,8 @@
         public DateTime registrationTime { get; set; }
         public DateTime releaseTime { get; set; }
         public bool local { get; set; }
-        public DateTime start { get; set; }
-        public DateTime end { get; set; }
+        public DateTime? start { get; set; }
+        public DateTime? end { get; set; }
         public string? period { get; set; }
         public Impact? impact { get; set; }
         public List<PublicationSection>? publicationSections { get; set; }
