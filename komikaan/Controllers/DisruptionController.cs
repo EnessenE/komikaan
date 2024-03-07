@@ -1,4 +1,5 @@
-﻿using komikaan.Enums;
+﻿using System.Diagnostics;
+using komikaan.Enums;
 using komikaan.Interfaces;
 using komikaan.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -22,20 +23,29 @@ namespace komikaan.Controllers
         public async Task<JourneyResult> GetTravelExpectationAsync(string fromStop, string toStop)
         {
             _logger.LogInformation("Calculating trip from {from} > {to}", fromStop, toStop);
-            var travelAdvice = new List<SimpleTravelAdvice>();
-            var disruptions = new List<SimpleDisruption>();
-
-            foreach (var supplier in _dataSuppliers)
-            {
-                disruptions.AddRange(await supplier.GetDisruptionsAsync(fromStop, toStop));
-                travelAdvice.AddRange(await supplier.GetTravelAdviceAsync(fromStop, toStop));
-            }
+            var (travelAdvice, disruptions) = await GenerateTravelDataAsync(fromStop, toStop);
 
             travelAdvice = travelAdvice.OrderBy(advice => advice.Route.First().PlannedDeparture).ToList();
             var journeyResult = GenerateJourneyResult(disruptions, travelAdvice);
             _logger.LogInformation("Calculated trip from {from} > {to}", fromStop, toStop);
 
             return journeyResult;
+        }
+
+        private async Task<(List<SimpleTravelAdvice> travelAdvice, List<SimpleDisruption> disruptions)> GenerateTravelDataAsync(string fromStop, string toStop)
+        {
+            var travelAdvice = new List<SimpleTravelAdvice>();
+            var disruptions = new List<SimpleDisruption>();
+
+            foreach (var supplier in _dataSuppliers)
+            {
+                var stopwatch = Stopwatch.StartNew();
+                disruptions.AddRange(await supplier.GetDisruptionsAsync(fromStop, toStop));
+                travelAdvice.AddRange(await supplier.GetTravelAdviceAsync(fromStop, toStop));
+                _logger.LogInformation("Calculated by {name} in {time}", supplier.Supplier, stopwatch.Elapsed.ToString("g"));
+            }
+
+            return (travelAdvice, disruptions);
         }
 
         private static JourneyResult GenerateJourneyResult(List<SimpleDisruption> disruptions, List<SimpleTravelAdvice> travelAdvice)
