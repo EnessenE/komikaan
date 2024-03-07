@@ -21,8 +21,8 @@ public class SimpleRoutePart
     public DateTime? ActualDeparture { get; set; }
     public DateTime? ActualArrival { get; set; }
 
-    public string PlannedArrivalTrack { get; set; }
-    public string PlannedDepartureTrack { get; set; }
+    public string? PlannedArrivalTrack { get; set; }
+    public string? PlannedDepartureTrack { get; set; }
     public string? ActualArrivalTrack { get; set; }
     public string? ActualDepartureTrack { get; set; }
 
