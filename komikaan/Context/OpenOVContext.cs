@@ -1,9 +1,15 @@
-﻿using GTFS;
+﻿using System.Data;
+using System.Data.Common;
+using Dapper;
+using GTFS;
 using GTFS.Entities;
+using GTFS.Entities.Enumerations;
 using komikaan.Data.Enums;
 using komikaan.Data.Models;
 using komikaan.Interfaces;
 using komikaan.Models;
+using Npgsql;
+using NpgsqlTypes;
 using Stop = GTFS.Entities.Stop;
 using Trip = GTFS.Entities.Trip;
 
@@ -21,10 +27,13 @@ namespace komikaan.Context
         private IDictionary<string, Trip> _trips;
         private IDictionary<string, Stop> _gtfsStops;
 
+        private string _connectionString;
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
-        public OpenOVContext(ILogger<OpenOVContext> logger)
+        public OpenOVContext(ILogger<OpenOVContext> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
             _stops = new List<SimpleStop>();
             _trips = new Dictionary<string, Trip>();
             _gtfsStops = new Dictionary<string, Stop>();
@@ -33,7 +42,7 @@ namespace komikaan.Context
         public DataSource Supplier { get; } = DataSource.OpenOV;
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            string path = "C:\\Users\\maile\\Downloads\\gtfs-nl";
+            string path = "E:\\gtfs-testing\\gtfs-nl-mini.zip";
 
             var reader = new GTFSReader<GTFSFeed>();
             var feed = reader.Read(path);
@@ -41,15 +50,20 @@ namespace komikaan.Context
             _feed = feed;
             _logger.LogInformation("Finished reading GTFS data");
 
+            GenerateData();
+            
+            return Task.CompletedTask;
+        }
+
+        private void GenerateData()
+        {
             GenerateStops();
             _logger.LogInformation("Finished generating {simpleStops}/{gtfsStops} stops", _stops.Count, _gtfsStops.Count);
 
             GenerateTrips();
             _logger.LogInformation("Finished generating {trips} trips", _trips.Count);
-
-            return Task.CompletedTask;
         }
-
+        
         private void GenerateTrips()
         {
             foreach (var feedTrip in _feed.Trips)
@@ -111,7 +125,83 @@ namespace komikaan.Context
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        public Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
+        public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
+        {
+            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString); // Use the appropriate connection type
+
+            var simpleFromStop = _stops.First(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
+            var simpleToStop = _stops.First(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
+
+            _logger.LogInformation("Selected from: {ids}", simpleFromStop.Ids[Supplier]);
+            _logger.LogInformation("Selected to: {ids}", simpleToStop.Ids[Supplier]);
+
+            var tripIds = await dbConnection.QueryAsync<string>(
+                @"SELECT DISTINCT t.trip_id, t.route_id, t.trip_id
+              FROM stop_times st
+              JOIN trips t ON st.trip_id = t.trip_id
+              WHERE st.stop_id IN (@StopId1, @StopId2)
+              ORDER BY t.route_id, t.trip_id",
+                new { StopId1 = simpleFromStop.Ids[Supplier].First(), StopId2 = simpleToStop.Ids[Supplier].First() }
+            );
+
+            if (!tripIds.Any())
+            {
+               _logger.LogInformation("No trips found between the specified stops.");
+            }
+            else
+            {
+                _logger.LogInformation("Found {trips}", tripIds.Count());
+            }
+
+            // Retrieve trip times between stops
+            var tripTimes = await dbConnection.QueryAsync<TripTimeInfo>(
+                @"SELECT st.trip_id, t.route_id, t.trip_headsign, r.route_type, r.route_short_name, r.route_long_name, st.stop_sequence, s.stop_name, st.arrival_time, st.departure_time, agency.agency_name
+              FROM stop_times st
+              JOIN trips t ON st.trip_id = t.trip_id
+              JOIN routes r ON t.route_id = r.route_id
+              JOIN agency agency ON agency.agency_id = r.agency_id
+              JOIN stops s ON st.stop_id = s.stop_id
+              WHERE st.stop_id = ANY(@StopIds) AND st.trip_id = ANY(@TripIds)
+              ORDER BY st.trip_id, st.stop_sequence",
+                new { StopIds = simpleToStop.Ids[Supplier], TripIds = tripIds },
+                commandType: CommandType.Text
+            );
+
+            
+            _logger.LogInformation("Found {routes} paths", tripTimes.Count());
+            var data = new List<SimpleTravelAdvice>();
+
+         
+            foreach (var tripTime in tripTimes)
+            {
+                data.Add(new SimpleTravelAdvice()
+                {
+                    Source = Supplier,
+                    ActualDurationInMinutes = 999,
+                    PlannedDurationInMinutes = 999,
+                    Route = new List<SimpleRoutePart>()
+                    {
+                        new SimpleRoutePart()
+                        {
+                            LineName = tripTime. route_short_name, 
+                            Direction= tripTime.trip_headsign,
+                            PlannedArrivalTrack = tripTime.stop_sequence?.ToString(),
+                            PlannedDeparture = DateTime.UtcNow,
+                            PlannedArrival = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow), new TimeOnly(tripTime.arrival_time.Hours, tripTime.arrival_time.Minutes, tripTime.arrival_time.Seconds)),
+                            DepartureStation = simpleFromStop.Name,
+                            ArrivalStation = tripTime.stop_name,
+                            Operator = tripTime.agency_name,
+                            RealisticTransfer = true,
+                        }
+                    }
+                });
+            }
+
+            return data;
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
+        private Task<IEnumerable<SimpleTravelAdvice>> OldAttempt(string from, string to)
         {
             var simpleFromStop = _stops.First(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
             var simpleToStop = _stops.First(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
@@ -120,11 +210,15 @@ namespace komikaan.Context
 
             foreach (var id in simpleFromStop.Ids[Supplier])
             {
-                stopTimes.AddRange(_feed.StopTimes.Where(stopTime => stopTime.StopId.Equals(id, StringComparison.InvariantCultureIgnoreCase)));
+                stopTimes.AddRange(_feed.StopTimes.Where(stopTime =>
+                    stopTime.StopId.Equals(id, StringComparison.InvariantCultureIgnoreCase)));
             }
+
             _logger.LogInformation("Found {count} stopTimes", stopTimes.Count());
 
-            stopTimes = stopTimes.Where(stopTime => stopTime.DepartureTime >= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(-1)) && stopTime.DepartureTime <= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(35))).ToList();
+            stopTimes = stopTimes.Where(stopTime =>
+                stopTime.DepartureTime >= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(-1)) &&
+                stopTime.DepartureTime <= TimeOfDay.FromDateTime(DateTime.UtcNow.AddMinutes(35))).ToList();
 
             _logger.LogInformation("Found filtered {count} stopTimes", stopTimes.Count());
 
@@ -135,7 +229,8 @@ namespace komikaan.Context
                 var trip = _trips[stopTime.TripId];
                 var calender = DateTime.UtcNow.CreateCalendar(trip.ServiceId);
                 //Covers date doesn't check start/end date.
-                if (calender.StartDate.ToUniversalTime() >= DateTime.UtcNow && calender.EndDate.ToUniversalTime() <= DateTime.UtcNow && calender.CoversDate(DateTime.UtcNow))
+                if (calender.StartDate.ToUniversalTime() >= DateTime.UtcNow &&
+                    calender.EndDate.ToUniversalTime() <= DateTime.UtcNow && calender.CoversDate(DateTime.UtcNow))
                 {
                     var simpleTravelAdvice = GenerateTravelAdvice(stopTime, trip);
 
@@ -148,8 +243,8 @@ namespace komikaan.Context
             }
 
             return Task.FromResult(advices.AsEnumerable());
-
         }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
         private SimpleTravelAdvice GenerateTravelAdvice(StopTime stopTime, Trip trip)
         {
@@ -190,4 +285,19 @@ namespace komikaan.Context
             return baseDate;
         }
     }
+}
+
+public class TripTimeInfo
+{
+    public string? trip_headsign { get; set; }
+    public string trip_id { get; set; }
+    public string route_id { get; set; }
+    public int? stop_sequence { get; set; }
+    public string stop_name { get; set; }
+    public string agency_name { get; set; }
+    public string route_long_name { get; set; }
+    public string route_short_name { get; set; }
+    public RouteType route_type { get; set; }
+    public TimeSpan arrival_time { get; set; }
+    public TimeSpan departure_time { get; set; }
 }
