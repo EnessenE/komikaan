@@ -230,7 +230,7 @@ namespace komikaan.Context
             simpleDisruption.Url = disruption.url;
             // If stops are missing, assume it applies to every station
             // While bad, we miss data to properly argue where it should apply.
-            simpleDisruption.AffectedStops = affectedStops ?? _allStations.Values.Select(station => station.code).ToList();
+            simpleDisruption.AffectedStops = affectedStops ?? _allStops.Values.Select(stop=> stop.Ids[Supplier].First()).ToList();
             simpleDisruption.Source = Supplier;
             simpleDisruption.Type = disruptionType;
             
