@@ -62,11 +62,16 @@ namespace komikaan.Controllers
 
         private static void CalculateExpectation(JourneyResult journeyResult)
         {
-            if (journeyResult.TravelAdvice.All(advice => advice.Route.Any(route => route.Cancelled)) && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15)))
+            //TODO: Expand this logic and make it not this
+            if (!journeyResult.TravelAdvice.Any())
+            {
+                journeyResult.JourneyExpectation = JourneyExpectation.Unknown;
+            }
+            else if (journeyResult.TravelAdvice.All(advice => advice.Route.Any(route => route.Cancelled)) && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15)))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (journeyResult.Disruptions.All(disruption => disruption.Type != DisruptionType.Maintenance) && journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
+            else if (journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }

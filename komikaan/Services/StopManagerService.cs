@@ -8,8 +8,9 @@ namespace komikaan.Services
     public class StopManagerService : IStopManagerService
     {
         private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
+        private readonly ILogger<StopManagerService> _logger;
+
         private List<SimpleStop> _stops;
-        private ILogger<StopManagerService> _logger;
 
         public StopManagerService(IEnumerable<IDataSupplierContext> dataSuppliers, ILogger<StopManagerService> logger)
         {
@@ -26,7 +27,7 @@ namespace komikaan.Services
         {
             var stops = new List<SimpleStop>();
 
-            //Merge stops 
+            _logger.LogInformation("Starting merging stops that are the same from different suppliers");
             foreach (var supplier in _dataSuppliers)
             {
                 var newStops = await supplier.GetAllStopsAsync();
