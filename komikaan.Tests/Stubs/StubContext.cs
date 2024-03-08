@@ -1,4 +1,5 @@
 ﻿using komikaan.Data.Enums;
+using komikaan.Data.Models;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Models.API.NS;
@@ -53,9 +54,14 @@ namespace komikaan.Tests.Stubs
             return Task.FromResult(_disruptions.AsEnumerable());
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptions(bool active)
+        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active)
         {
             return Task.FromResult(_disruptions.AsEnumerable());
+        }
+
+        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync()
+        {
+            throw new NotImplementedException();
         }
 
         public Task<IDictionary<string, Station>> GetAllStops()

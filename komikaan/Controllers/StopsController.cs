@@ -1,3 +1,4 @@
+﻿using komikaan.Data.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,20 +9,21 @@ namespace komikaan.Controllers
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
-        private readonly IDataSupplierContext _dataSupplier;
+        private readonly IStopManagerService _stopManager;
 
-        public StopsController(ILogger<StopsController> logger, IDataSupplierContext dataSupplier)
+        public StopsController(ILogger<StopsController> logger, IStopManagerService stopManager)
         {
             _logger = logger;
-            _dataSupplier = dataSupplier;
+            _stopManager = stopManager;
         }
 
 
         [HttpGet()]
-        public async Task<IEnumerable<string>> GetStopsAsync()
+        public async Task<IEnumerable<SimpleStop>> GetStopsAsync()
         {
-            var data = await _dataSupplier.GetAllStops();
-            return data.Keys;
+            var stops = await _stopManager.GetAllStopsAsync();
+
+            return stops;
         }
 
         /// <summary>
@@ -29,19 +31,19 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<string>> SearchStopsAsync(string filter)
+        public async Task<IEnumerable<SimpleStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
-            var data = await _dataSupplier.GetAllStops();
-            var names = data.Keys.ToList();
-            var foundResults = names.Where(name => name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            var stops = await _stopManager.GetAllStopsAsync();
 
-            if (foundResults.Any())
+            var foundStops = stops.Where(stop => stop.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
+
+            foreach (var found in foundStops)
             {
-                foundResults = foundResults.Chunk(10).First().ToList();
+                _logger.LogInformation("Found {id} {name}", found.Ids, found.Name);
             }
 
-            return foundResults;
+            return foundStops;
         }
     }
 }

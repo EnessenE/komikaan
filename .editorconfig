@@ -163,6 +163,7 @@ csharp_style_expression_bodied_local_functions = false:silent
 ##################################
 dotnet_diagnostic.av1500.max_statement_count = 10
 dotnet_diagnostic.av1580.severity = suggestion
+dotnet_diagnostic.cs8618.severity = suggestion
 
 
 ##################################
