@@ -2,10 +2,8 @@
 using Dapper;
 using GTFS;
 using GTFS.Entities;
-using GTFS.Entities.Enumerations;
 using komikaan.Data.Enums;
 using komikaan.Data.Models;
-using komikaan.Extensions;
 using komikaan.Interfaces;
 using komikaan.Models;
 using Stop = GTFS.Entities.Stop;
@@ -251,21 +249,4 @@ namespace komikaan.Context
             return baseDate;
         }
     }
-}
-
-public class TripTimeInfo
-{
-    public string? trip_headsign { get; set; }
-    public string trip_id { get; set; }
-    public string route_id { get; set; }
-    public string? platform_code_start { get; set; }
-    public string? platform_code_end { get; set; }
-    public string stop_name_start { get; set; }
-    public string stop_name_end { get; set; }
-    public string agency_name { get; set; }
-    public string route_long_name { get; set; }
-    public string route_short_name { get; set; }
-    public RouteType? route_type { get; set; }
-    public TimeSpan arrival_time_end { get; set; }
-    public TimeSpan departure_time_start { get; set; }
 }
