@@ -21,8 +21,26 @@ public class SimpleRoutePart
     public DateTime? ActualDeparture { get; set; }
     public DateTime? ActualArrival { get; set; }
 
-    public string PlannedArrivalTrack { get; set; }
-    public string PlannedDepartureTrack { get; set; }
+    public string? PlannedArrivalTrack { get; set; }
+    public string? PlannedDepartureTrack { get; set; }
     public string? ActualArrivalTrack { get; set; }
     public string? ActualDepartureTrack { get; set; }
+
+    /// <summary>
+    /// Direction of the route.
+    /// Example: Amsterdam Central
+    /// </summary>
+    public string? Direction { get; set; }
+
+    /// <summary>
+    /// Name of the line
+    /// Examples: Elizabeth line, 4, IC 143
+    /// </summary>
+    public string? LineName { get; set; }
+
+    /// <summary>
+    /// Operator of the line, for example:
+    /// QBuzz, Arriva, NS, DB, FerryInc
+    /// </summary>
+    public string? Operator { get; set; }
 }

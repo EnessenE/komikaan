@@ -2,6 +2,7 @@
 using komikaan.Controllers;
 using komikaan.Data.Enums;
 using komikaan.Enums;
+using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Tests.Stubs;
 
@@ -28,7 +29,7 @@ namespace komikaan.Tests.Tests
             _stubContext = new StubContext();
 
             _disruptionController =
-                new DisruptionController(new MsTestLogger<DisruptionController>(_testContext), _stubContext);
+                new DisruptionController(new MsTestLogger<DisruptionController>(_testContext), new List<IDataSupplierContext>(){_stubContext});
         }
 
         [TestMethod]
