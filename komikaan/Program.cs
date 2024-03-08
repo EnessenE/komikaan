@@ -66,11 +66,17 @@ internal class Program
         refitClientBuilder.AddHttpMessageHandler(serviceProvider
             => new HttpLoggingHandler(serviceProvider.GetRequiredService<ILogger<HttpLoggingHandler>>()));
         refitClientBuilder.Services.AddSingleton<HttpLoggingHandler>();
-        builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
+        AddDataSuppliers(builder);
         builder.Services.AddHostedService<DataService>();
+        builder.Services.AddSingleton<IStopManagerService, StopManagerService>();
 
 
         SetupApplication(builder, corsName);
+    }
+
+    private static void AddDataSuppliers(WebApplicationBuilder builder)
+    {
+        builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
     }
 
     private static void SetupApplication(WebApplicationBuilder builder, string corsName)

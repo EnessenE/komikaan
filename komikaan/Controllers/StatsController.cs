@@ -22,7 +22,7 @@ namespace komikaan.Controllers
             var stats = new TransportStatistics();
             foreach (var dataSupplier in _dataSuppliers)
             {
-                var data = await dataSupplier.GetAllDisruptions(true);
+                var data = await dataSupplier.GetAllDisruptionsAsync(true);
                 stats.Disruptions.Add(dataSupplier.Supplier, data.Count());
             }
             return stats;

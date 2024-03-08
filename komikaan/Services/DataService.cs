@@ -9,11 +9,13 @@ namespace komikaan.Services
         private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
         private readonly ILogger<DataService> _logger;
         private readonly PeriodicTimer _periodicTimer;
+        private readonly IStopManagerService _stopManagerService;
 
-        public DataService(IEnumerable<IDataSupplierContext> dataSuppliers, ILogger<DataService> logger)
+        public DataService(IEnumerable<IDataSupplierContext> dataSuppliers, ILogger<DataService> logger, IStopManagerService stopManagerService)
         {
             _dataSuppliers = dataSuppliers;
             _logger = logger;
+            _stopManagerService = stopManagerService;
             _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         }
 
@@ -43,12 +45,12 @@ namespace komikaan.Services
             _logger.LogInformation("Finished reloading all data suppliers");
         }
 
-        private async Task StartAllDataSuppliersAsync(CancellationToken stoppingToken)
+        private async Task StartAllDataSuppliersAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Starting data suppliers");
             foreach (var dataSupplier in _dataSuppliers)
             {
-                await StartDataSupplierAsync(stoppingToken, dataSupplier);
+                await StartDataSupplierAsync(cancellationToken, dataSupplier);
             }
 
             _logger.LogInformation("Finished starting data suppliers");
@@ -75,6 +77,7 @@ namespace komikaan.Services
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await StartAllDataSuppliersAsync(cancellationToken);
+            await _stopManagerService.StartAsync(cancellationToken);
             await base.StartAsync(cancellationToken);
         }
 
