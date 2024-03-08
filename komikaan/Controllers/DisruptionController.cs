@@ -25,7 +25,7 @@ namespace komikaan.Controllers
             _logger.LogInformation("Calculating trip from {from} > {to}", fromStop, toStop);
             var (travelAdvice, disruptions) = await GenerateTravelDataAsync(fromStop, toStop);
 
-            travelAdvice = travelAdvice.OrderBy(advice => advice.Route.First().PlannedDeparture).ToList();
+            travelAdvice = travelAdvice.OrderBy(advice => advice.Route.First().PlannedDeparture.ToUniversalTime()).ToList();
             var journeyResult = GenerateJourneyResult(disruptions, travelAdvice);
             _logger.LogInformation("Calculated trip from {from} > {to}", fromStop, toStop);
 
