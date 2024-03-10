@@ -1,9 +1,11 @@
 ﻿using System.Data;
+using System.Data.Common;
 using Dapper;
 using GTFS;
 using GTFS.Entities;
 using komikaan.Data.Enums;
 using komikaan.Data.Models;
+using komikaan.Extensions;
 using komikaan.Interfaces;
 using komikaan.Models;
 using Stop = GTFS.Entities.Stop;
@@ -16,14 +18,11 @@ namespace komikaan.Context
     // Essentially brute forcing to have fun
     public class OpenOVContext : IDataSupplierContext
     {
-        private ILogger<OpenOVContext> _logger;
-        private GTFSFeed _feed;
+        private readonly ILogger<OpenOVContext> _logger;
+        private readonly IList<SimpleStop> _stops;
+        private readonly IDictionary<string, GTFSStop> _gtfsStops;
 
-        private IList<SimpleStop> _stops;
-        private IDictionary<string, Trip> _trips;
-        private IDictionary<string, Stop> _gtfsStops;
-
-        private string _connectionString;
+        private readonly string _connectionString;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
         public OpenOVContext(ILogger<OpenOVContext> logger, IConfiguration configuration)
@@ -31,75 +30,67 @@ namespace komikaan.Context
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
             _stops = new List<SimpleStop>();
-            _trips = new Dictionary<string, Trip>();
-            _gtfsStops = new Dictionary<string, Stop>();
+            _gtfsStops = new Dictionary<string, GTFSStop>();
         }
 
         public DataSource Supplier { get; } = DataSource.OpenOV;
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            string path = "E:\\gtfs-testing\\gtfs-nl-mini.zip";
-
-            var reader = new GTFSReader<GTFSFeed>();
-            var feed = reader.Read(path);
-
-            _feed = feed;
+            await GenerateDataAsync();
             _logger.LogInformation("Finished reading GTFS data");
-
-            GenerateData();
-            
-            return Task.CompletedTask;
         }
 
-        private void GenerateData()
+        private async Task GenerateDataAsync()
         {
-            GenerateStops();
+            var data = await LoadStopsAsync();
+            GenerateStops(data);
             _logger.LogInformation("Finished generating {simpleStops}/{gtfsStops} stops", _stops.Count, _gtfsStops.Count);
+        }
 
-            GenerateTrips();
-            _logger.LogInformation("Finished generating {trips} trips", _trips.Count);
-        }
-        
-        private void GenerateTrips()
+        private async Task<IList<GTFSStop>> LoadStopsAsync()
         {
-            foreach (var feedTrip in _feed.Trips)
-            {
-                _trips.Add(feedTrip.Id, feedTrip);
-            }
+            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            var stops = await dbConnection.QueryAsync<GTFSStop>(
+                @"select stop_id, stop_code, stop_name, parent_station from stops",
+                commandType: CommandType.Text
+            );
+
+            return stops.ToList();
         }
+
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        private void GenerateStops()
+        private void GenerateStops(IList<GTFSStop> stops)
         {
-            foreach (var stop in _feed.Stops)
+            foreach (var stop in stops)
             {
-                _gtfsStops.Add(stop.Id, stop);
+                _gtfsStops.Add(stop.stop_id, stop);
                 var simpleStop = new SimpleStop();
                 var existingStop =
-                    _stops.FirstOrDefault(existingStop => existingStop.Name.Equals(stop.Name, StringComparison.InvariantCultureIgnoreCase)|| existingStop.Ids[Supplier].Contains(stop.ParentStation, StringComparer.InvariantCultureIgnoreCase));
+                    _stops.FirstOrDefault(existingStop => existingStop.Name.Equals(stop.stop_name, StringComparison.InvariantCultureIgnoreCase) || existingStop.Ids[Supplier].Contains(stop.parent_station, StringComparer.InvariantCultureIgnoreCase));
                 if (existingStop != null)
                 {
-                    if (!existingStop.Ids[Supplier].Contains(stop.Id, StringComparer.InvariantCultureIgnoreCase))
+                    if (!existingStop.Ids[Supplier].Contains(stop.stop_id, StringComparer.InvariantCultureIgnoreCase))
                     {
-                        existingStop.Ids[Supplier].Add(stop.Id);
+                        existingStop.Ids[Supplier].Add(stop.stop_id);
                     }
-                    if (!string.IsNullOrWhiteSpace(stop.Code))
+                    if (!string.IsNullOrWhiteSpace(stop.stop_code))
                     {
-                        existingStop.Codes[Supplier].Add(stop.Code);
+                        existingStop.Codes[Supplier].Add(stop.stop_code);
                     }
                 }
                 else
                 {
-                    simpleStop.Name = string.Intern(stop.Name);
-                    simpleStop.Ids.Add(Supplier, new List<string>() { stop.Id });
+                    simpleStop.Name = string.Intern(stop.stop_name);
+                    simpleStop.Ids.Add(Supplier, new List<string>() { stop.stop_id });
                     simpleStop.Codes.Add(Supplier, new List<string>());
-                    if (!string.IsNullOrWhiteSpace(stop.Code))
+                    if (!string.IsNullOrWhiteSpace(stop.stop_code))
                     {
-                        simpleStop.Codes[Supplier].Add(stop.Code);
+                        simpleStop.Codes[Supplier].Add(stop.stop_code);
                     }
-                    if (!string.IsNullOrWhiteSpace(stop.ParentStation) && !stop.ParentStation.Equals(stop.Id, StringComparison.InvariantCultureIgnoreCase))
+                    if (!string.IsNullOrWhiteSpace(stop.parent_station) && !stop.parent_station.Equals(stop.stop_id, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        simpleStop.Ids[Supplier].Add(stop.ParentStation);
+                        simpleStop.Ids[Supplier].Add(stop.parent_station);
                     }
                     _stops.Add(simpleStop);
                 }
@@ -132,17 +123,19 @@ namespace komikaan.Context
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString); // Use the appropriate connection type
 
-            var simpleFromStop = _stops.First(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
-            var simpleToStop = _stops.First(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
-            var searchDate = new DateTime(2024, 03, 05);
+            var simpleFromStop = _stops.FirstOrDefault(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
+            var simpleToStop = _stops.FirstOrDefault(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
+            var searchDate = new DateTime(2024, 03, 08);
 
-            _logger.LogInformation("Selected from: {ids}", simpleFromStop.Ids[Supplier]);
-            _logger.LogInformation("Selected to: {ids}", simpleToStop.Ids[Supplier]);
+            if (simpleFromStop != null && simpleToStop != null)
+            {
+                _logger.LogInformation("Selected from: {ids}", simpleFromStop.Ids[Supplier]);
+                _logger.LogInformation("Selected to: {ids}", simpleToStop.Ids[Supplier]);
 
 
-            // Retrieve trip times between stops
-            var tripTimes = await dbConnection.QueryAsync<TripTimeInfo>(
-                @"SELECT
+                // Retrieve trip times between stops
+                var tripTimes = await dbConnection.QueryAsync<TripTimeInfo>(
+                    @"SELECT
 	                    1 as level,
 	                    startStopTimes.trip_id, 
 	                    trip.route_id, 
@@ -171,82 +164,69 @@ namespace komikaan.Context
                     WHERE
 	                    startStopTimes.stop_id = ANY(@StartStopIds) AND targetStopTimes.stop_id = ANY(@EndStopIds) AND startStopTimes.departure_time < targetStopTimes.arrival_time
                         and dates.date = @date",
-                new { StartStopIds = simpleFromStop.Ids[Supplier], EndStopIds = simpleToStop.Ids[Supplier], date = searchDate.Date },
-                commandType: CommandType.Text
-            );
+                    new
+                    {
+                        StartStopIds = simpleFromStop.Ids[Supplier],
+                        EndStopIds = simpleToStop.Ids[Supplier],
+                        date = searchDate.Date
+                    },
+                    commandType: CommandType.Text
+                );
 
-            
-            _logger.LogInformation("Found {routes} paths", tripTimes.Count());
-            var data = new List<SimpleTravelAdvice>();
 
-         
-            foreach (var tripTime in tripTimes)
-            {
-                var item = new SimpleTravelAdvice()
+                _logger.LogInformation("Found {routes} paths", tripTimes.Count());
+                var data = new List<SimpleTravelAdvice>();
+
+
+                foreach (var tripTime in tripTimes)
                 {
-                    Source = Supplier,
-                    ActualDurationInMinutes = 999,
-                    PlannedDurationInMinutes = 999,
-                    Route = new List<SimpleRoutePart>()
-                };
-                var part = new SimpleRoutePart();
-                part.LineName = tripTime.route_short_name;
-                part.Direction = tripTime.trip_headsign;
-                part.PlannedDepartureTrack = tripTime.platform_code_start?.ToString();
-                part.PlannedArrivalTrack = tripTime.platform_code_end?.ToString();
-                part.PlannedArrival = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow), new TimeOnly(tripTime.arrival_time_end.Hours, tripTime.arrival_time_end.Minutes, tripTime.arrival_time_end.Seconds));
-                part.PlannedDeparture = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow), new TimeOnly(tripTime.departure_time_start.Hours, tripTime.departure_time_start.Minutes, tripTime.departure_time_start.Seconds));
-                part.DepartureStation = tripTime.stop_name_start;
-                part.ArrivalStation = tripTime.stop_name_end;
-                part.Operator = tripTime.agency_name;
-                part.RealisticTransfer = true;
-                part.AlternativeTransport = false;
-                part.Type = tripTime.route_type?.ToLegType() ?? LegType.Unknown;
-                item.Route.Add(part);
-                data.Add(item);
+                    var item = new SimpleTravelAdvice()
+                    {
+                        Source = Supplier,
+                        ActualDurationInMinutes = 999,
+                        PlannedDurationInMinutes = 999,
+                        Route = new List<SimpleRoutePart>()
+                    };
+                    var part = new SimpleRoutePart();
+                    part.LineName = tripTime.route_short_name;
+                    part.Direction = tripTime.trip_headsign;
+                    part.PlannedDepartureTrack = tripTime.platform_code_start?.ToString();
+                    part.PlannedArrivalTrack = tripTime.platform_code_end?.ToString();
+                    part.PlannedArrival = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow),
+                        new TimeOnly(tripTime.arrival_time_end.Hours, tripTime.arrival_time_end.Minutes,
+                            tripTime.arrival_time_end.Seconds));
+                    part.PlannedDeparture = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow),
+                        new TimeOnly(tripTime.departure_time_start.Hours, tripTime.departure_time_start.Minutes,
+                            tripTime.departure_time_start.Seconds));
+                    part.DepartureStation = tripTime.stop_name_start;
+                    part.ArrivalStation = tripTime.stop_name_end;
+                    part.Operator = tripTime.agency_name;
+                    part.RealisticTransfer = true;
+                    part.AlternativeTransport = false;
+                    part.Type = tripTime.route_type?.ToLegType() ?? LegType.Unknown;
+                    item.Route.Add(part);
+
+                    var time = (item.Route.Last().PlannedArrival - item.Route.First().PlannedDeparture);
+                    item.PlannedDurationInMinutes = time?.TotalMinutes ?? 0;
+                    item.ActualDurationInMinutes = null;
+                    data.Add(item);
+                }
+
+                return data;
             }
-
-            return data;
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        private SimpleTravelAdvice GenerateTravelAdvice(StopTime stopTime, Trip trip)
-        {
-            var stop = _gtfsStops[stopTime.StopId];
-            var simpleTravelAdvice = new SimpleTravelAdvice();
-            simpleTravelAdvice.ActualDurationInMinutes = 999;
-            simpleTravelAdvice.PlannedDurationInMinutes = 999;
-            simpleTravelAdvice.Source = Supplier;
-            simpleTravelAdvice.Route = new List<SimpleRoutePart>();
-
-            var routePart = new SimpleRoutePart();
-            routePart.Type = LegType.Unknown;
-            routePart.ArrivalStation = "who knows";
-            routePart.PlannedDeparture = ToDateTime(stopTime.DepartureTime!.Value);
-            routePart.PlannedArrival = ToDateTime(stopTime.ArrivalTime!.Value);
-            routePart.PlannedArrivalTrack = "??";
-            routePart.PlannedDepartureTrack = stop.PlatformCode;
-            routePart.DepartureStation = stop.Name;
-            routePart.RealisticTransfer = true;
-            routePart.LineName = trip.ShortName;
-            routePart.Direction = trip.Headsign;
-            var route = _feed.Routes.First(route => route.Id.Equals(trip.RouteId));
-            routePart.LineName = route.ShortName; 
-            var agency = _feed.Agencies.First(agency => agency.Id == route.AgencyId);
-            routePart.Operator = agency.Name;
-            
-            simpleTravelAdvice.Route.Add(routePart);
-            
-            return simpleTravelAdvice;
-        }
-
-        private DateTime ToDateTime(TimeOfDay timeOfDay)
-        {
-            var baseDate = DateTime.UtcNow.Date;
-            baseDate = baseDate.AddHours(timeOfDay.Hours);
-            baseDate= baseDate.AddMinutes(timeOfDay.Minutes);
-            baseDate= baseDate.AddSeconds(timeOfDay.Seconds);
-            return baseDate;
+            else
+            {
+                _logger.LogInformation("A unrecognized stop was present {fromStop} - {toStop}", from, to);
+                return Enumerable.Empty<SimpleTravelAdvice>();
+            }
         }
     }
+}
+
+public class GTFSStop
+{
+    public string stop_id { get; set; }
+    public string stop_code { get; set; }
+    public string stop_name { get; set; }
+    public string parent_station { get; set; }
 }
