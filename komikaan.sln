@@ -17,7 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "komikaan.Tests", "komikaan.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GTFS", "..\GTFS\src\GTFS\GTFS.csproj", "{009ECAC6-AAF0-4F1D-ABEB-8FF516801912}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "komikaan.Harvester", "komikaan.Harvester\komikaan.Harvester.csproj", "{681CFD32-CE55-4234-BF54-FC9462C11E75}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +40,6 @@ Global
 		{009ECAC6-AAF0-4F1D-ABEB-8FF516801912}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{009ECAC6-AAF0-4F1D-ABEB-8FF516801912}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{009ECAC6-AAF0-4F1D-ABEB-8FF516801912}.Release|Any CPU.Build.0 = Release|Any CPU
-		{681CFD32-CE55-4234-BF54-FC9462C11E75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{681CFD32-CE55-4234-BF54-FC9462C11E75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{681CFD32-CE55-4234-BF54-FC9462C11E75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{681CFD32-CE55-4234-BF54-FC9462C11E75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
