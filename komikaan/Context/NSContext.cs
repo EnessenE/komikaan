@@ -42,11 +42,8 @@ namespace komikaan.Context
 
         public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to)
         {
-            if (_allStops.ContainsKey(from) && _allStops.ContainsKey(to))
+            if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var fromStop = _allStops[from];
-                var toStop = _allStops[to];
-
                 var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops.Any(stop => stop.Equals(fromStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase) || stop.Equals(toStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase)));
                 relevantDisruptions = relevantDisruptions.ToList().FindAll(disruption => disruption.Active);
 
@@ -71,11 +68,8 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
         {
-            if (_allStops.ContainsKey(from) && _allStops.ContainsKey(to))
+            if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var fromStop = _allStops[from];
-                var toStop = _allStops[to];
-                //TODO: Get specific ids for specific sets
                 var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Ids[Supplier].First(), toStop.Ids[Supplier].First());
                 var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
                 foreach (var trip in travelAdvice.trips)
