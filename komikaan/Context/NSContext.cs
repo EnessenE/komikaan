@@ -139,8 +139,35 @@ namespace komikaan.Context
 
                 routePart.RealisticTransfer = leg.changePossible;
 
+                CreateStopsOnRoute(leg, routePart);
+
+                var data = leg.stops.Select(stop => stop.lat);
+
                 simpleTravelAdvice.Route.Add(routePart);
             }
+        }
+
+        private static void CreateStopsOnRoute(Leg leg, SimpleRoutePart routePart)
+        {
+            routePart.Stops = new List<SimpleJourneyStop>();
+            foreach (var nsStop in leg.stops)
+            {
+                routePart.Stops.Add(new SimpleJourneyStop()
+                {
+                    Name = nsStop.name,
+                    PlannedDeparture = nsStop.plannedDepartureDateTime,
+                    ActualDeparture = null,
+                    PlannedDepartureTrack = nsStop.plannedDepartureTrack,
+                    ActualDepartureTrack = nsStop.actualDepartureTrack,
+                    PlannedArrival = nsStop.plannedArrivalDateTime,
+                    ActualArrival = null,
+                    PlannedArrivalTrack = nsStop.plannedArrivalTrack,
+                    ActualArrivalTrack = nsStop.actualArrivalTrack,
+                });
+            }
+            //First and last one are just the arrival and departure station
+            routePart.Stops.Remove(routePart.Stops.First());
+            routePart.Stops.Remove(routePart.Stops.Last());
         }
 
         private async Task GetAllDataAsync()
