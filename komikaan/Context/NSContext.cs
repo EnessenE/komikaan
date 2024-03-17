@@ -42,12 +42,9 @@ namespace komikaan.Context
 
         public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to)
         {
-            if (_allStops.ContainsKey(from) && _allStops.ContainsKey(to))
+            if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var fromStop = _allStops[from];
-                var toStop = _allStops[to];
-
-                var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops.Any(stop => stop.Equals(fromStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase) || stop.Equals(toStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase)));
+                var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops == null || disruption.AffectedStops.Any(stop => stop.Ids[Supplier].First().Equals(fromStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase) || stop.Ids[Supplier].First().Equals(toStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase)));
                 relevantDisruptions = relevantDisruptions.ToList().FindAll(disruption => disruption.Active);
 
                 return Task.FromResult(relevantDisruptions);
@@ -71,11 +68,8 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
         {
-            if (_allStops.ContainsKey(from) && _allStops.ContainsKey(to))
+            if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var fromStop = _allStops[from];
-                var toStop = _allStops[to];
-                //TODO: Get specific ids for specific sets
                 var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Ids[Supplier].First(), toStop.Ids[Supplier].First());
                 var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
                 foreach (var trip in travelAdvice.trips)
@@ -145,7 +139,31 @@ namespace komikaan.Context
 
                 routePart.RealisticTransfer = leg.changePossible;
 
+                CreateStopsOnRoute(leg, routePart);
+
                 simpleTravelAdvice.Route.Add(routePart);
+            }
+        }
+
+        private static void CreateStopsOnRoute(Leg leg, SimpleRoutePart routePart)
+        {
+            routePart.Stops = new List<SimpleJourneyStop>();
+            foreach (var nsStop in leg.stops)
+            {
+                routePart.Stops.Add(new SimpleJourneyStop()
+                {
+                    Name = nsStop.name,
+                    PlannedDeparture = nsStop.plannedDepartureDateTime,
+                    ActualDeparture = null,
+                    PlannedDepartureTrack = nsStop.plannedDepartureTrack,
+                    ActualDepartureTrack = nsStop.actualDepartureTrack,
+                    PlannedArrival = nsStop.plannedArrivalDateTime,
+                    ActualArrival = null,
+                    PlannedArrivalTrack = nsStop.plannedArrivalTrack,
+                    ActualArrivalTrack = nsStop.actualArrivalTrack,
+                    Longitude = nsStop.lng,
+                    Latitude = nsStop.lat
+                });
             }
         }
 
@@ -200,7 +218,8 @@ namespace komikaan.Context
             _logger.LogInformation("Loading: {name}, active {act}", disruption.title, disruption.isActive);
 
             var advices = disruption.timespans?.Select(timespan => timespan.advices);
-            var affectedStops = disruption.publicationSections?.SelectMany(section => section.section.stations.Select(disruptionStation => disruptionStation.stationCode)).ToList();
+            var affectedStops = GetAffectedStops(disruption);
+
             var situation = disruption.timespans?.Select(timespan => timespan.situation);
             var description = new List<string>();
             if (!Enum.TryParse(disruption.type, true, out DisruptionType disruptionType))
@@ -228,14 +247,35 @@ namespace komikaan.Context
             simpleDisruption.Start = disruption.start;
             simpleDisruption.Active = disruption.isActive;
             simpleDisruption.Url = disruption.url;
-            // If stops are missing, assume it applies to every station
-            // While bad, we miss data to properly argue where it should apply.
-            simpleDisruption.AffectedStops = affectedStops ?? _allStops.Values.Select(stop=> stop.Ids[Supplier].First()).ToList();
+            // If stops are missing, assume it applies to every station just and make it null
+            simpleDisruption.AffectedStops = affectedStops;
             simpleDisruption.Source = Supplier;
             simpleDisruption.Type = disruptionType;
-            
+
             return simpleDisruption;
         }
 
+        private List<SimpleStop>? GetAffectedStops(Disruption disruption)
+        {
+            List<SimpleStop>? affectedStops = null;
+
+
+            var affectedStations = disruption.publicationSections?.SelectMany(section => section.section.stations);
+            if (affectedStations != null)
+            {
+                affectedStops = new List<SimpleStop>();
+                foreach (var disruptionStation in affectedStations)
+                {
+                    affectedStops.Add(new SimpleStop()
+                    {
+                        Name = disruptionStation.name,
+                        Ids = new Dictionary<DataSource, List<string>>()
+                            { { Supplier, new List<string>() { disruptionStation.stationCode } } },
+                    });
+                }
+            }
+
+            return affectedStops;
+        }
     }
 }
