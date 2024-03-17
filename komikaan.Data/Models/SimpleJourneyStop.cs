@@ -15,5 +15,7 @@ namespace komikaan.Data.Models
         public string? PlannedDepartureTrack { get; set; }
         public string? ActualArrivalTrack { get; set; }
         public string? ActualDepartureTrack { get; set; }
+        public double? Longitude { get; set; }
+        public double? Latitude { get; set; }
     }
 }

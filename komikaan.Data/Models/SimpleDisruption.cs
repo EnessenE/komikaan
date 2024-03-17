@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using komikaan.Data.Enums;
+using komikaan.Data.Models;
 using komikaan.Enums;
 
 namespace komikaan.Models;
@@ -18,7 +19,7 @@ public class SimpleDisruption
     public DisruptionStage Stage { get; set; }
     public IEnumerable<string>? Advices { get; set; }
     public bool Active { get; set; }
-    public List<string> AffectedStops { get; set; }
+    public List<SimpleStop>? AffectedStops { get; set; }
 
     /// <summary>
     /// URL with possibly more info
