@@ -69,7 +69,7 @@ internal class Program
         AddDataSuppliers(builder);
         builder.Services.AddHostedService<DataService>();
         builder.Services.AddSingleton<IStopManagerService, StopManagerService>();
-
+        builder.Services.AddSingleton<ITravelAdviceHandler, TravelAdviceHandler>();
 
         SetupApplication(builder, corsName);
     }
