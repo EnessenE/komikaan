@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using komikaan.Enums;
-using komikaan.Interfaces;
+﻿using komikaan.Interfaces;
 using komikaan.Models;
 using Microsoft.AspNetCore.Mvc;
 

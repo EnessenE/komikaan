@@ -6,12 +6,20 @@ using Refit;
 using Serilog;
 using System.Reflection;
 using komikaan.Data.Configuration;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using System.Diagnostics.Metrics;
+using System.Diagnostics;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "I dont like top levels, will receive a reformat ever.")]
 internal class Program
 {
     public static void Main(string[] args)
     {
+        var meter = new Meter("komikaan.api", "1.0.0");
+
+
         var builder = WebApplication.CreateBuilder(args);
 
         var corsName = "sources";
@@ -34,6 +42,8 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.Configure<SupplierConfigurations>(builder.Configuration.GetSection("SupplierMappings"));
+
+        CreateObservability(builder, builder.Services, meter);
 
         builder.Services.AddCors(options =>
         {
@@ -74,6 +84,50 @@ internal class Program
         SetupApplication(builder, corsName);
     }
 
+    private static void CreateObservability(IHostApplicationBuilder builder, IServiceCollection services,
+        Meter meter)
+    {
+        var tracingOtlpEndpoint = builder.Configuration.GetValue<string>("OTLP_ENDPOINT_URL");
+
+        var greeterActivitySource = new ActivitySource(meter.Name);
+
+        var otel = services.AddOpenTelemetry();
+
+        // Configure OpenTelemetry Resources with the application name
+        otel.ConfigureResource(resource => resource
+            .AddService(builder.Environment.ApplicationName));
+
+        // Add Metrics for ASP.NET Core and our custom metrics and export to Prometheus
+        otel.WithMetrics(metrics => metrics
+            // Metrics provider from OpenTelemetry
+            .AddAspNetCoreInstrumentation()
+            .AddMeter(meter.Name)
+            // Metrics provides by ASP.NET Core in .NET 8
+            .AddMeter("Microsoft.AspNetCore.Hosting")
+            .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+            .AddPrometheusExporter()
+            .AddConsoleExporter());
+
+        // Add Tracing for ASP.NET Core and our custom ActivitySource and export to Jaeger
+        otel.WithTracing(tracing =>
+        {
+            tracing.AddAspNetCoreInstrumentation();
+            tracing.AddHttpClientInstrumentation();
+            tracing.AddSource(greeterActivitySource.Name);
+            if (tracingOtlpEndpoint != null)
+            {
+                tracing.AddOtlpExporter(otlpOptions =>
+                {
+                    otlpOptions.Endpoint = new Uri(tracingOtlpEndpoint);
+                });
+            }
+            else
+            {
+                tracing.AddConsoleExporter();
+            }
+        });
+    }
+
     private static void AddDataSuppliers(WebApplicationBuilder builder)
     {
         builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
@@ -89,6 +143,7 @@ internal class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        app.MapPrometheusScrapingEndpoint();
 
         app.UseCors(corsName);
 
