@@ -67,7 +67,7 @@ internal class Program
         IHttpClientBuilder refitClientBuilder = builder.Services.AddRefitClient<INSApi>(refitSettings)
             .ConfigureHttpClient(httpClient =>
             {
-                httpClient.BaseAddress = new Uri(builder.Configuration.GetValue<string>("NSApiUrl")!);
+                httpClient.BaseAddress = new Uri(builder.Configuration.GetValue<string>("NS_Api_Url")!);
                 httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", builder.Configuration.GetValue<string>("ns_api_key"));
                 // Will throw `TaskCanceledException` if the request goes longer than 3 seconds.
                 httpClient.Timeout = TimeSpan.FromSeconds(10);
