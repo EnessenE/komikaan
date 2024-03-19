@@ -35,13 +35,26 @@ namespace komikaan.Handlers
 
             foreach (var supplier in _dataSuppliers)
             {
-                var stopwatch = Stopwatch.StartNew();
-                disruptions.AddRange(await supplier.GetDisruptionsAsync(fromStop, toStop));
-                travelAdvice.AddRange(await supplier.GetTravelAdviceAsync(fromStop, toStop));
-                _logger.LogInformation("Calculated by {name} in {time}", supplier.Supplier, stopwatch.Elapsed.ToString("g"));
-            }
+                disruptions.AddRange(await GetSupplierDisruptionsAsync(fromStop, toStop, supplier));
+                travelAdvice.AddRange(await GetSupplierTravelAdviceAsync(fromStop, toStop, supplier));
 
+                _logger.LogInformation("Calculated by {name}", supplier.Supplier);
+            }
             return (travelAdvice, disruptions);
+        }
+
+        private async Task<IEnumerable<SimpleTravelAdvice>> GetSupplierTravelAdviceAsync(string fromStop, string toStop, IDataSupplierContext supplier)
+        {
+            using var activity = Telemetry.Activity.StartActivity("Travel advice calculation");
+            activity?.SetTag("supplier", supplier.Supplier);
+            return await supplier.GetTravelAdviceAsync(fromStop, toStop);
+        }
+
+        private async Task<IEnumerable<SimpleDisruption>> GetSupplierDisruptionsAsync(string fromStop, string toStop, IDataSupplierContext supplier)
+        {
+            using var activity = Telemetry.Activity.StartActivity("Disruption retrieval");
+            activity?.SetTag("supplier", supplier.Supplier);
+            return await supplier.GetDisruptionsAsync(fromStop, toStop);
         }
 
         private static JourneyResult GenerateJourneyResult(List<SimpleDisruption> disruptions, List<SimpleTravelAdvice> travelAdvice)

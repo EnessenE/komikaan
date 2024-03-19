@@ -105,8 +105,7 @@ internal class Program
             // Metrics provides by ASP.NET Core in .NET 8
             .AddMeter("Microsoft.AspNetCore.Hosting")
             .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-            .AddPrometheusExporter()
-            .AddConsoleExporter());
+            .AddPrometheusExporter());
 
         // Add Tracing for ASP.NET Core and our custom ActivitySource and export to Jaeger
         otel.WithTracing(tracing =>
