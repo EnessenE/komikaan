@@ -2,18 +2,20 @@
 using komikaan.Controllers;
 using komikaan.Data.Enums;
 using komikaan.Enums;
+using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Tests.Stubs;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace komikaan.Tests.Tests
 {
     [TestClass]
-    public class DisruptionControllerTests
+    public class TravelAdviceHandlingTests
     {
         private static TestContext _testContext;
 
-        private DisruptionController _disruptionController;
+        private ITravelAdviceHandler _travelAdviceHandler;
         private StubContext _stubContext;
 
         [ClassInitialize]
@@ -28,8 +30,8 @@ namespace komikaan.Tests.Tests
         {
             _stubContext = new StubContext();
 
-            _disruptionController =
-                new DisruptionController(new MsTestLogger<DisruptionController>(_testContext), new List<IDataSupplierContext>(){_stubContext});
+            _travelAdviceHandler =
+                new TravelAdviceHandler(new NullLogger<TravelAdviceHandler>(), new List<IDataSupplierContext>(){_stubContext});
         }
 
         [TestMethod]
@@ -50,7 +52,7 @@ namespace komikaan.Tests.Tests
 
             _stubContext.Add(new SimpleDisruption() { Active = true });
             _stubContext.Add(new SimpleTravelAdvice() { ActualDurationInMinutes = 1, PlannedDurationInMinutes = 1, Route = routes, Source = DataSource.NederlandseSpoorwegen });
-            var result = await _disruptionController.GetTravelExpectationAsync("test station1", "test station2");
+            var result = await _travelAdviceHandler.GetTravelExpectationAsync("test station1", "test station2");
 
             Assert.IsNotNull(result, "Some data should return, even if nothing is found");
             result.JourneyExpectation.Should().Be(JourneyExpectation.Full);

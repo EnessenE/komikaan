@@ -1,4 +1,5 @@
 ﻿using komikaan.Data.Enums;
+using komikaan.Data.Models;
 
 namespace komikaan.Models;
 
@@ -25,6 +26,13 @@ public class SimpleRoutePart
     public string? PlannedDepartureTrack { get; set; }
     public string? ActualArrivalTrack { get; set; }
     public string? ActualDepartureTrack { get; set; }
+
+    /// <summary>
+    /// Stops the route goes over
+    /// If the supplier does not support stops it will be null
+    /// If there are no stops then its simply an empty array
+    /// </summary>
+    public List<SimpleJourneyStop>? Stops { get; set; }
 
     /// <summary>
     /// Direction of the route.
