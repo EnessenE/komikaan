@@ -51,7 +51,7 @@ namespace komikaan.Context
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             var stops = await dbConnection.QueryAsync<GTFSStop>(
-                @"select stop_id, stop_code, stop_name, parent_station from stops",
+                @"select ""Id"", ""Code"", ""Name"", ""ParentStation"" from stops",
                 commandType: CommandType.Text
             );
 
@@ -64,33 +64,33 @@ namespace komikaan.Context
         {
             foreach (var stop in stops)
             {
-                _gtfsStops.Add(stop.stop_id, stop);
+                _gtfsStops.Add(stop.id, stop);
                 var simpleStop = new SimpleStop();
                 var existingStop =
-                    _stops.FirstOrDefault(existingStop => existingStop.Name.Equals(stop.stop_name, StringComparison.InvariantCultureIgnoreCase) || existingStop.Ids[Supplier].Contains(stop.parent_station, StringComparer.InvariantCultureIgnoreCase));
+                    _stops.FirstOrDefault(existingStop => existingStop.Name.Equals(stop.name, StringComparison.InvariantCultureIgnoreCase) || existingStop.Ids[Supplier].Contains(stop.parentstation, StringComparer.InvariantCultureIgnoreCase));
                 if (existingStop != null)
                 {
-                    if (!existingStop.Ids[Supplier].Contains(stop.stop_id, StringComparer.InvariantCultureIgnoreCase))
+                    if (!existingStop.Ids[Supplier].Contains(stop.id, StringComparer.InvariantCultureIgnoreCase))
                     {
-                        existingStop.Ids[Supplier].Add(stop.stop_id);
+                        existingStop.Ids[Supplier].Add(stop.id);
                     }
-                    if (!string.IsNullOrWhiteSpace(stop.stop_code))
+                    if (!string.IsNullOrWhiteSpace(stop.code))
                     {
-                        existingStop.Codes[Supplier].Add(stop.stop_code);
+                        existingStop.Codes[Supplier].Add(stop.code);
                     }
                 }
                 else
                 {
-                    simpleStop.Name = string.Intern(stop.stop_name);
-                    simpleStop.Ids.Add(Supplier, new List<string>() { stop.stop_id });
+                    simpleStop.Name = string.Intern(stop.name);
+                    simpleStop.Ids.Add(Supplier, new List<string>() { stop.id });
                     simpleStop.Codes.Add(Supplier, new List<string>());
-                    if (!string.IsNullOrWhiteSpace(stop.stop_code))
+                    if (!string.IsNullOrWhiteSpace(stop.code))
                     {
-                        simpleStop.Codes[Supplier].Add(stop.stop_code);
+                        simpleStop.Codes[Supplier].Add(stop.code);
                     }
-                    if (!string.IsNullOrWhiteSpace(stop.parent_station) && !stop.parent_station.Equals(stop.stop_id, StringComparison.InvariantCultureIgnoreCase))
+                    if (!string.IsNullOrWhiteSpace(stop.parentstation) && !stop.parentstation.Equals(stop.id, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        simpleStop.Ids[Supplier].Add(stop.parent_station);
+                        simpleStop.Ids[Supplier].Add(stop.parentstation);
                     }
                     _stops.Add(simpleStop);
                 }
@@ -161,7 +161,7 @@ namespace komikaan.Context
                         routes.Add(new List<RouteInfo>());
                     }
                     routes.Last().Add(info);
-                    last += 1;
+                    last = info.path_seq;
                 }
 
                 foreach (var route in routes)
@@ -241,8 +241,8 @@ namespace komikaan.Context
 
 public class GTFSStop
 {
-    public string stop_id { get; set; }
-    public string stop_code { get; set; }
-    public string stop_name { get; set; }
-    public string parent_station { get; set; }
+    public string id { get; set; }
+    public string code { get; set; }
+    public string name { get; set; }
+    public string parentstation { get; set; }
 }
