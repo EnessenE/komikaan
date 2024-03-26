@@ -1,15 +1,9 @@
 ﻿using System.Data;
-using System.Data.Common;
 using Dapper;
-using GTFS;
-using GTFS.Entities;
 using komikaan.Data.Enums;
 using komikaan.Data.Models;
-using komikaan.Extensions;
 using komikaan.Interfaces;
 using komikaan.Models;
-using Stop = GTFS.Entities.Stop;
-using Trip = GTFS.Entities.Trip;
 
 namespace komikaan.Context
 {
@@ -47,20 +41,21 @@ namespace komikaan.Context
             _logger.LogInformation("Finished generating {simpleStops}/{gtfsStops} stops", _stops.Count, _gtfsStops.Count);
         }
 
-        private async Task<IList<GTFSStop>> LoadStopsAsync()
+        private Task<IEnumerable<GTFSStop>> LoadStopsAsync()
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
-            var stops = await dbConnection.QueryAsync<GTFSStop>(
+            var stops = dbConnection.Query<GTFSStop>(
                 @"select ""Id"", ""Code"", ""Name"", ""ParentStation"" from stops",
-                commandType: CommandType.Text
+                commandType: CommandType.Text, 
+                buffered: true
             );
 
-            return stops.ToList();
+            return Task.FromResult(stops);
         }
 
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        private void GenerateStops(IList<GTFSStop> stops)
+        private void GenerateStops(IEnumerable<GTFSStop> stops)
         {
             foreach (var stop in stops)
             {
