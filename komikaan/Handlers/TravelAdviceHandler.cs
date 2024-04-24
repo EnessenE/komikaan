@@ -32,29 +32,34 @@ namespace komikaan.Handlers
         {
             var travelAdvice = new List<SimpleTravelAdvice>();
             var disruptions = new List<SimpleDisruption>();
+            using CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 
             foreach (var supplier in _dataSuppliers)
             {
-                disruptions.AddRange(await GetSupplierDisruptionsAsync(fromStop, toStop, supplier));
-                travelAdvice.AddRange(await GetSupplierTravelAdviceAsync(fromStop, toStop, supplier));
+                disruptions.AddRange(await GetSupplierDisruptionsAsync(fromStop, toStop, supplier, cancellationTokenSource.Token));
+                travelAdvice.AddRange(await GetSupplierTravelAdviceAsync(fromStop, toStop, supplier, cancellationTokenSource.Token));
 
                 _logger.LogInformation("Calculated by {name}", supplier.Supplier);
             }
             return (travelAdvice, disruptions);
         }
 
-        private async Task<IEnumerable<SimpleTravelAdvice>> GetSupplierTravelAdviceAsync(string fromStop, string toStop, IDataSupplierContext supplier)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1561:Signature contains too many parameters", Justification = "CTS passing")]
+        private async Task<IEnumerable<SimpleTravelAdvice>> GetSupplierTravelAdviceAsync(string fromStop, string toStop, IDataSupplierContext supplier, CancellationToken token)
         {
             using var activity = Telemetry.Activity.StartActivity("Travel advice calculation");
             activity?.SetTag("supplier", supplier.Supplier);
-            return await supplier.GetTravelAdviceAsync(fromStop, toStop);
+            return await supplier.GetTravelAdviceAsync(fromStop, toStop, token);
         }
 
-        private async Task<IEnumerable<SimpleDisruption>> GetSupplierDisruptionsAsync(string fromStop, string toStop, IDataSupplierContext supplier)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1561:Signature contains too many parameters", Justification = "CTS passing")]
+
+        private async Task<IEnumerable<SimpleDisruption>> GetSupplierDisruptionsAsync(string fromStop, string toStop, IDataSupplierContext supplier, CancellationToken token)
         {
             using var activity = Telemetry.Activity.StartActivity("Disruption retrieval");
             activity?.SetTag("supplier", supplier.Supplier);
-            return await supplier.GetDisruptionsAsync(fromStop, toStop);
+            var data = await supplier.GetDisruptionsAsync(fromStop, toStop, token);
+            return data;
         }
 
         private static JourneyResult GenerateJourneyResult(List<SimpleDisruption> disruptions, List<SimpleTravelAdvice> travelAdvice)
@@ -80,7 +85,7 @@ namespace komikaan.Handlers
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (journeyResult.TravelAdvice.Any(advice => advice.Route.Any(route => route.Cancelled)))
+            else if (journeyResult.TravelAdvice.Any(advice => advice.Route.Count(route => route.Cancelled) >= 2) || journeyResult.Disruptions.Any(disruption => disruption.Type == DisruptionType.Calamity))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }
