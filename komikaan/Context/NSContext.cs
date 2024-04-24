@@ -32,15 +32,15 @@ namespace komikaan.Context
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await GetAllDataAsync();
+            await GetAllDataAsync(cancellationToken);
         }
 
         public async Task LoadRelevantDataAsync(CancellationToken cancellationToken)
         {
-            await GetAllDataAsync();
+            await GetAllDataAsync(cancellationToken);
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to)
+        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to, CancellationToken cancellationToken)
         {
             if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
@@ -55,22 +55,22 @@ namespace komikaan.Context
             }
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active)
+        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active, CancellationToken cancellationToken)
         {
             var disruptions = _allDisruptions.Where(disruption => disruption.Active = active);
             return Task.FromResult(disruptions);
         }
 
-        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync()
+        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(_allStops.Values.AsEnumerable());
         }
 
-        public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
+        public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to, CancellationToken cancellationToken)
         {
             if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Ids[Supplier].First(), toStop.Ids[Supplier].First());
+                var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Ids[Supplier].First(), toStop.Ids[Supplier].First(), cancellationToken);
                 var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
                 foreach (var trip in travelAdvice.trips)
                 {
@@ -167,12 +167,12 @@ namespace komikaan.Context
             }
         }
 
-        private async Task GetAllDataAsync()
+        private async Task GetAllDataAsync(CancellationToken cancellationToken)
         {
             try
             {
-                _allStops = await LoadAllStopsAsync();
-                _allDisruptions = await LoadAllDisruptionsAsync();
+                _allStops = await LoadAllStopsAsync(cancellationToken);
+                _allDisruptions = await LoadAllDisruptionsAsync(cancellationToken);
             }
             catch (ApiException apiException)
             {
@@ -181,9 +181,9 @@ namespace komikaan.Context
             }
         }
 
-        private async Task<List<SimpleDisruption>> LoadAllDisruptionsAsync()
+        private async Task<List<SimpleDisruption>> LoadAllDisruptionsAsync(CancellationToken cancellationToken)
         {
-            var rawDisruptions = await _nsApi.GetAllDisruptions();
+            var rawDisruptions = await _nsApi.GetAllDisruptions(cancellationToken);
 
             var data = new List<SimpleDisruption>();
             foreach (var disruption in rawDisruptions)
@@ -195,9 +195,9 @@ namespace komikaan.Context
             return data;
         }
 
-        private async Task<Dictionary<string, SimpleStop>> LoadAllStopsAsync()
+        private async Task<Dictionary<string, SimpleStop>> LoadAllStopsAsync(CancellationToken cancellationToken)
         {
-            var stationRoot = await _nsApi.GetAllStations();
+            var stationRoot = await _nsApi.GetAllStations(cancellationToken);
             var dict = new Dictionary<string, SimpleStop>();
             foreach (var station in stationRoot.payload)
             {

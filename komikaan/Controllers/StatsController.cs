@@ -19,10 +19,11 @@ namespace komikaan.Controllers
         [HttpGet()]
         public async Task<TransportStatistics> GetStopsAsync()
         {
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var stats = new TransportStatistics();
             foreach (var dataSupplier in _dataSuppliers)
             {
-                var data = await dataSupplier.GetAllDisruptionsAsync(true);
+                var data = await dataSupplier.GetAllDisruptionsAsync(true, tokenSource.Token);
                 stats.Disruptions.Add(dataSupplier.Supplier, data.Count());
             }
             return stats;
