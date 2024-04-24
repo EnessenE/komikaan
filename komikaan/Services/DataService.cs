@@ -24,7 +24,7 @@ namespace komikaan.Services
             {
                 while (await _periodicTimer.WaitForNextTickAsync(stoppingToken))
                 {
-                    await LoadAllDataSuppliersAsync(stoppingToken);
+                    await LoadAllDataSuppliersAsync();
                 }
             }
             catch (OperationCanceledException)
@@ -33,12 +33,13 @@ namespace komikaan.Services
             }
         }
 
-        private async Task LoadAllDataSuppliersAsync(CancellationToken stoppingToken)
+        private async Task LoadAllDataSuppliersAsync()
         {
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(25));
             _logger.LogInformation("Reloading all data suppliers");
             foreach (var dataSupplier in _dataSuppliers)
             {
-                await LoadDataSupplierAsync(stoppingToken, dataSupplier);
+                await LoadDataSupplierAsync(tokenSource.Token, dataSupplier);
             }
 
             _logger.LogInformation("Finished reloading all data suppliers");
@@ -64,11 +65,22 @@ namespace komikaan.Services
         }
 
 
-        private async Task LoadDataSupplierAsync(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
+        private async Task LoadDataSupplierAsync(CancellationToken cancellationToken, IDataSupplierContext dataSupplier)
         {
             _logger.LogInformation("Reloading Datasupplier {name}", dataSupplier.GetType().FullName);
             var stopwatch = Stopwatch.StartNew();
-            await dataSupplier.LoadRelevantDataAsync(stoppingToken);
+            try
+            {
+                await dataSupplier.LoadRelevantDataAsync(cancellationToken);
+            }
+            catch (TaskCanceledException taskCancelledException)
+            {
+                _logger.LogError(taskCancelledException, "Timed out while reloading information");
+            }
+            catch(OperationCanceledException operationCancelledException)
+            {
+                _logger.LogError(operationCancelledException, "Operation cancelled while reloading info");
+            }
             _logger.LogInformation("Reloading Datasupplier {name} in {ms} ms", dataSupplier.GetType().FullName,
                 stopwatch.ElapsedMilliseconds);
         }
