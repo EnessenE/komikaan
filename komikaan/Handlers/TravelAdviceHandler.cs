@@ -85,7 +85,7 @@ namespace komikaan.Handlers
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (journeyResult.TravelAdvice.Count(advice => advice.Route.Any(route => route.Cancelled)) >= 2 || journeyResult.Disruptions.Any(disruption => disruption.Type == DisruptionType.Calamity))
+            else if (journeyResult.TravelAdvice.Count(advice => advice.Route.Any(route => route.Cancelled)) >= 2 || journeyResult.Disruptions.Any(disruption => disruption.Type == DisruptionType.Disruption))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }
