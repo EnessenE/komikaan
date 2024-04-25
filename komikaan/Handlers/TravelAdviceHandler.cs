@@ -84,11 +84,11 @@ namespace komikaan.Handlers
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Unknown;
             }
-            else if (cancelledParts == totalParts || (journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15))))
+            else if (cancelledParts == totalParts)
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (cancelledParts >= 1 && cancelledParts >= totalParts/2)
+            else if (cancelledParts >= 1 && cancelledParts >= totalParts/2 || (journeyResult.Disruptions.Any(disruption => disruption.Type == DisruptionType.Disruption && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15))))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }
