@@ -76,16 +76,19 @@ namespace komikaan.Handlers
 
         private static void CalculateExpectation(JourneyResult journeyResult)
         {
+            var cancelledParts = journeyResult.TravelAdvice.Count(advice => advice.Route.Any(route => route.Cancelled));
+            var totalParts = journeyResult.TravelAdvice.Count();
+
             //TODO: Expand this logic and make it not this
             if (!journeyResult.TravelAdvice.Any())
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Unknown;
             }
-            else if (journeyResult.TravelAdvice.All(advice => advice.Route.Any(route => route.Cancelled)) && journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15)))
+            else if (cancelledParts == totalParts || (journeyResult.Disruptions.Any(disruption => disruption.Type != DisruptionType.Maintenance && disruption.ExpectedEnd?.ToUniversalTime() > DateTime.UtcNow.AddMinutes(15))))
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Nope;
             }
-            else if (journeyResult.TravelAdvice.Count(advice => advice.Route.Any(route => route.Cancelled)) >= 2 || journeyResult.Disruptions.Any(disruption => disruption.Type == DisruptionType.Disruption))
+            else if (cancelledParts >= 1 && cancelledParts >= totalParts/2)
             {
                 journeyResult.JourneyExpectation = JourneyExpectation.Maybe;
             }
