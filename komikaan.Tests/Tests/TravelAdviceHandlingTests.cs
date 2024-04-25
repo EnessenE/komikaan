@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using komikaan.Controllers;
 using komikaan.Data.Enums;
 using komikaan.Enums;
 using komikaan.Handlers;
@@ -189,6 +188,9 @@ namespace komikaan.Tests.Tests
         [DataTestMethod]
         [DataRow(0, 0, 0, JourneyExpectation.Unknown)]
         [DataRow(1, 0, 1, JourneyExpectation.Full)]
+        [DataRow(10, 0, 1, JourneyExpectation.Full)]
+        [DataRow(10, 1, 1, JourneyExpectation.Full)]
+        [DataRow(10, 3, 1, JourneyExpectation.Full)]
         [DataRow(0, 1, 1, JourneyExpectation.Nope)]
         [DataRow(1, 1, 1, JourneyExpectation.Maybe)]
         [DataRow(1, 1, 2, JourneyExpectation.Maybe)]
@@ -237,6 +239,105 @@ namespace komikaan.Tests.Tests
                     DepartureStation = stationName1,
                     ArrivalStation = stationName2
                 });
+            }
+
+            for (int i = 0; i < amountOfGoodAdvices; i++)
+            {
+                _stubContext.Add(new SimpleTravelAdvice() { ActualDurationInMinutes = 1, PlannedDurationInMinutes = 1, Route = goodRoutes, Source = DataSource.NederlandseSpoorwegen });
+            }
+            for (int i = 0; i < amountOfBadAdvices; i++)
+            {
+                _stubContext.Add(new SimpleTravelAdvice() { ActualDurationInMinutes = 1, PlannedDurationInMinutes = 1, Route = badRoutes, Source = DataSource.NederlandseSpoorwegen });
+            }
+            var result = await _travelAdviceHandler.GetTravelExpectationAsync("test station1", "test station2");
+
+            Assert.IsNotNull(result, "Some data should return, even if nothing is found");
+            result.JourneyExpectation.Should().Be(journeyExpectation);
+        }
+
+
+
+        [DataTestMethod]
+        [DataRow(0, 0, 0, 0, JourneyExpectation.Unknown, DisruptionType.Maintenance)]
+        [DataRow(1, 0, 1, 1, JourneyExpectation.Full, DisruptionType.Maintenance)]
+        [DataRow(10, 0, 1, 1, JourneyExpectation.Full, DisruptionType.Maintenance)]
+        [DataRow(10, 1, 1, 1, JourneyExpectation.Full, DisruptionType.Maintenance)]
+        [DataRow(10, 3, 1, 1, JourneyExpectation.Full, DisruptionType.Maintenance)]
+        [DataRow(0, 1, 1, 1, JourneyExpectation.Nope, DisruptionType.Maintenance)]
+        [DataRow(1, 1, 1, 1, JourneyExpectation.Maybe, DisruptionType.Maintenance)]
+        [DataRow(1, 1, 2, 1, JourneyExpectation.Maybe, DisruptionType.Maintenance)]
+        [DataRow(2, 2, 1, 1, JourneyExpectation.Maybe, DisruptionType.Maintenance)]
+        [DataRow(10, 10, 10, 1, JourneyExpectation.Maybe, DisruptionType.Maintenance)]
+        [DataRow(50, 50, 50, 1, JourneyExpectation.Maybe, DisruptionType.Maintenance)]
+        [DataRow(0, 0, 0, 0, JourneyExpectation.Unknown, DisruptionType.Disruption)]
+        [DataRow(1, 0, 1, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(10, 0, 1, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(10, 1, 1, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(10, 3, 1, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(0, 1, 1, 1, JourneyExpectation.Nope, DisruptionType.Disruption)]
+        [DataRow(1, 1, 1, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(1, 1, 2, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(2, 2, 1, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(10, 10, 10, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(50, 50, 50, 1, JourneyExpectation.Maybe, DisruptionType.Disruption)]
+        [DataRow(0, 0, 0, 0, JourneyExpectation.Unknown, DisruptionType.Calamity)]
+        [DataRow(1, 0, 1, 1, JourneyExpectation.Full, DisruptionType.Calamity)]
+        [DataRow(10, 0, 1, 1, JourneyExpectation.Full, DisruptionType.Calamity)]
+        [DataRow(10, 1, 1, 1, JourneyExpectation.Full, DisruptionType.Calamity)]
+        [DataRow(10, 3, 1, 1, JourneyExpectation.Full, DisruptionType.Calamity)]
+        [DataRow(0, 1, 1, 1, JourneyExpectation.Nope, DisruptionType.Calamity)]
+        [DataRow(1, 1, 1, 1, JourneyExpectation.Maybe, DisruptionType.Calamity)]
+        [DataRow(1, 1, 2, 1, JourneyExpectation.Maybe, DisruptionType.Calamity)]
+        [DataRow(2, 2, 1, 1, JourneyExpectation.Maybe, DisruptionType.Calamity)]
+        [DataRow(10, 10, 10, 1, JourneyExpectation.Maybe, DisruptionType.Calamity)]
+        [DataRow(50, 50, 50, 1, JourneyExpectation.Maybe, DisruptionType.Calamity)]
+        public async Task DisruptionsAndRouteMixing(int amountOfGoodAdvices, int amountOfBadAdvices, int amountOfRouteParts, int amountOfDisruptions, JourneyExpectation journeyExpectation, DisruptionType type)
+        {
+            var stationName1 = "TestStation1";
+            var stationName2 = "TestStation2";
+
+            var badRoutes = new List<SimpleRoutePart>();
+            var goodRoutes = new List<SimpleRoutePart>();
+
+            for (int i = 0; i < amountOfRouteParts; i++)
+            {
+                badRoutes.Add(new SimpleRoutePart()
+                {
+                    PlannedDeparture = DateTime.UtcNow,
+                    Cancelled = false,
+                    DepartureStation = stationName1,
+                    ArrivalStation = stationName2
+                });
+                badRoutes.Add(new SimpleRoutePart()
+                {
+                    PlannedDeparture = DateTime.UtcNow,
+                    Cancelled = true,
+                    DepartureStation = stationName1,
+                    ArrivalStation = stationName2
+                });
+            }
+
+            for (int i = 0; i < amountOfRouteParts; i++)
+            {
+                goodRoutes.Add(new SimpleRoutePart()
+                {
+                    PlannedDeparture = DateTime.UtcNow,
+                    Cancelled = false,
+                    DepartureStation = stationName1,
+                    ArrivalStation = stationName2
+                });
+                goodRoutes.Add(new SimpleRoutePart()
+                {
+                    PlannedDeparture = DateTime.UtcNow,
+                    Cancelled = false,
+                    DepartureStation = stationName1,
+                    ArrivalStation = stationName2
+                });
+            }
+
+            for (int i = 0; i < amountOfDisruptions; i++)
+            {
+                _stubContext.Add(new SimpleDisruption() { Active = true, ExpectedEnd = DateTime.UtcNow.AddDays(1), Type = type });
             }
 
             for (int i = 0; i < amountOfGoodAdvices; i++)
