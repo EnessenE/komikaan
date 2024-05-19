@@ -4,5 +4,5 @@ public enum DataSource
 {
     Unknown,
     NederlandseSpoorwegen,
-    OpenOV
+    KomIkAan
 }
