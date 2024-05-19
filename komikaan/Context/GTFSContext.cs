@@ -10,16 +10,16 @@ namespace komikaan.Context
     //Random code to mess around with GTFS data
     // Very inefficient and not-prod ready
     // Essentially brute forcing to have fun
-    public class OpenOVContext : IDataSupplierContext
+    public class GTFSContext : IDataSupplierContext
     {
-        private readonly ILogger<OpenOVContext> _logger;
+        private readonly ILogger<GTFSContext> _logger;
         private readonly IList<SimpleStop> _stops;
         private readonly IDictionary<string, GTFSStop> _gtfsStops;
 
         private readonly string _connectionString;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
-        public OpenOVContext(ILogger<OpenOVContext> logger, IConfiguration configuration)
+        public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
         {
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
@@ -27,7 +27,7 @@ namespace komikaan.Context
             _gtfsStops = new Dictionary<string, GTFSStop>();
         }
 
-        public DataSource Supplier { get; } = DataSource.OpenOV;
+        public DataSource Supplier { get; } = DataSource.KomIkAan;
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             await GenerateDataAsync();
@@ -98,93 +98,33 @@ namespace komikaan.Context
             return Task.CompletedTask;
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to)
+        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to, CancellationToken cancellationToken)
         {
             return Task.FromResult(Enumerable.Empty<SimpleDisruption>());
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active)
+        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active, CancellationToken cancellationToken)
         {
             return Task.FromResult(Enumerable.Empty<SimpleDisruption>());
         }
 
-        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync()
+        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(_stops.AsEnumerable());
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
+        public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to, CancellationToken cancellationToken)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString); // Use the appropriate connection type
 
             var simpleFromStop = _stops.FirstOrDefault(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
             var simpleToStop = _stops.FirstOrDefault(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
-            var searchDate = new DateTime(2024, 03, 08);
+            var searchDate = new DateTime(2024, 05, 19);
 
-            if (simpleFromStop != null && simpleToStop != null)
-            {
-                _logger.LogInformation("Selected from: {ids}", simpleFromStop.Ids[Supplier]);
-                _logger.LogInformation("Selected to: {ids}", simpleToStop.Ids[Supplier]);
-
-
-                // Retrieve trip times between stops
-                var tripTimes = await dbConnection.QueryAsync<RouteInfo>(
-                @"SELECT out_stop_name, out_stop_id, out_stop_num, out_stop_pk, out_cost, seq, path_seq, start_vid, end_vid, node, edge from public.get_route_data(
-	                        @StartStopIds, 
-	                        @EndStopIds
-                        )",
-                    new
-                    {
-                        StartStopIds = simpleFromStop.Ids[Supplier],
-                        EndStopIds = simpleToStop.Ids[Supplier],
-                        date = searchDate.Date
-                    },
-                    commandType: CommandType.Text
-                );
-
-                
-                _logger.LogInformation("Found {routes} paths", tripTimes.Count());
-                var data = new List<SimpleTravelAdvice>();
-                var routes = new List<List<RouteInfo>>();
-                var last = int.MaxValue;
-                foreach (var info in tripTimes)
-                {
-                    if (info.path_seq < last)
-                    {
-                        //new one
-                        routes.Add(new List<RouteInfo>());
-                    }
-                    routes.Last().Add(info);
-                    last = info.path_seq;
-                }
-
-                foreach (var route in routes)
-                {
-                    var item = new SimpleTravelAdvice()
-                    {
-                        Source = Supplier,
-                        ActualDurationInMinutes = 999,
-                        PlannedDurationInMinutes = 999,
-                        Route = new List<SimpleRoutePart>()
-                    };
-
-                    CalculateRoute(route, item);
-
-
-                    var time = (item.Route.Last().PlannedArrival - item.Route.First().PlannedDeparture);
-                    item.PlannedDurationInMinutes = time?.TotalMinutes ?? 0;
-                    item.ActualDurationInMinutes = null;
-                    data.Add(item);
-                }
-
-                return data;
-            }
-            else
-            {
-                _logger.LogInformation("A unrecognized stop was present {fromStop} - {toStop}", from, to);
-                return Enumerable.Empty<SimpleTravelAdvice>();
-            }
+            _logger.LogInformation("A unrecognized stop was present {fromStop} - {toStop}", from, to);
+            return await Task.FromResult<IEnumerable<SimpleTravelAdvice>>(Enumerable.Empty<SimpleTravelAdvice>());
+            
         }
 
 

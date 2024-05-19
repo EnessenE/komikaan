@@ -130,7 +130,7 @@ internal class Program
     private static void AddDataSuppliers(WebApplicationBuilder builder)
     {
         //builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
-        builder.Services.AddSingleton<IDataSupplierContext, OpenOVContext>();
+        builder.Services.AddSingleton<IDataSupplierContext, GTFSContext>();
     }
 
     private static void SetupApplication(WebApplicationBuilder builder, string corsName)
