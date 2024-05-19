@@ -30,7 +30,7 @@ namespace komikaan.Services
             _logger.LogInformation("Starting merging stops that are the same from different suppliers");
             foreach (var supplier in _dataSuppliers)
             {
-                var newStops = await supplier.GetAllStopsAsync();
+                var newStops = await supplier.GetAllStopsAsync(cancellationToken);
                 ProcessStopsPerSupplier(newStops, stops, supplier);
             }
 

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[1.7.54] - 24-04-2024
+### Changed
+- Make sure disruptions are properly detected
+- Adapt unit tests to test for these disruptions
+
+[1.7.4] - 24-04-2024
+### Changed
+- Use DisruptionType Disruption instead of Calamity
+
+[1.7.3] - 24-04-2024
+### Changed
+- Fix maybe state
+
+[1.7.2] - 24-04-2024
+### Changed
+- Prevent data retrieval timer from failing due to external API's timing out
+- Take in account calamity when calculating journeyexpectations
+- Update OpenTelemetry packages
+- Update Misc packages
+
 [1.7.1] - 17-03-2024
 ### Added
 - OpenTelemetry support

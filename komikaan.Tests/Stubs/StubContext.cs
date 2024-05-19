@@ -49,27 +49,27 @@ namespace komikaan.Tests.Stubs
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to)
+        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to, CancellationToken cancellationToken)
         {
             return Task.FromResult(_disruptions.AsEnumerable());
         }
 
-        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active)
+        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active, CancellationToken cancellationToken)
         {
             return Task.FromResult(_disruptions.AsEnumerable());
         }
 
-        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync()
+        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IDictionary<string, Station>> GetAllStops()
+        public Task<IDictionary<string, Station>> GetAllStops(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to)
+        public Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to, CancellationToken cancellationToken)
         {
             return Task.FromResult(_travelAdvices.AsEnumerable());
         }
