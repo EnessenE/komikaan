@@ -58,19 +58,6 @@ namespace komikaan.Services
 
         private void ModifyExistingStop(IDataSupplierContext supplier, SimpleStop stop, SimpleStop existingStop)
         {
-            if (stop.Codes.Any())
-            {
-                if (!existingStop.Codes.ContainsKey(supplier.Supplier))
-                {
-                    existingStop.Codes.Add(supplier.Supplier, stop.Codes.First().Value);
-                }
-                else
-                {
-                    _logger.LogInformation("Merging {name} codes from same supplier", stop.Name);
-                    existingStop.Codes[supplier.Supplier].AddRange(stop.Codes.First().Value);
-                }
-            }
-
             if (stop.Ids.Any())
             {
                 if (!existingStop.Ids.ContainsKey(supplier.Supplier))
@@ -83,6 +70,11 @@ namespace komikaan.Services
                     _logger.LogInformation("Merging {name} codes from same supplier", stop.Name);
                 }
             }
+        }
+
+        public Task<IEnumerable<SimpleStop>> FindStopsAsync(string text)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -17,7 +17,7 @@ namespace komikaan.Tests.Tests
         {
             string path = "C:\\Users\\maile\\Downloads\\gtfs-nl.zip";
 
-            var reader = new GTFSReader<GTFSFeed>();
+            var reader = new GTFSReader<GTFSFeed>("unit-test");
             var feed = reader.Read(path);
 
 

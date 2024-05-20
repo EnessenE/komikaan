@@ -17,15 +17,6 @@ namespace komikaan.Controllers
             _stopManager = stopManager;
         }
 
-
-        [HttpGet()]
-        public async Task<IEnumerable<SimpleStop>> GetStopsAsync()
-        {
-            var stops = await _stopManager.GetAllStopsAsync();
-
-            return stops;
-        }
-
         /// <summary>
         /// Searches through all stops of the datasuppliers
         /// </summary>
@@ -34,16 +25,20 @@ namespace komikaan.Controllers
         public async Task<IEnumerable<SimpleStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
-            var stops = await _stopManager.GetAllStopsAsync();
+            var stops = await _stopManager.FindStopsAsync(filter);
 
-            var foundStops = stops.Where(stop => stop.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
-
-            foreach (var found in foundStops)
+            foreach (var found in stops)
             {
                 _logger.LogInformation("Found {id} {name}", found.Ids, found.Name);
             }
 
-            return foundStops;
+            return stops;
+        }
+
+        [HttpGet("{stopId}/departures")]
+        public async Task<IEnumerable<string>> GetDeparturesAsync(string stopId)
+        {
+            return await Task.FromResult(new List<string>() { "ap", "ba", "darfwet" });
         }
     }
 }

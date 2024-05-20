@@ -6,5 +6,6 @@ namespace komikaan.Interfaces
     {
         Task StartAsync(CancellationToken cancellationToken);
         Task<IEnumerable<SimpleStop>> GetAllStopsAsync();
+        Task<IEnumerable<SimpleStop>> FindStopsAsync(string text);
     }
 }

@@ -69,20 +69,11 @@ namespace komikaan.Context
                     {
                         existingStop.Ids[Supplier].Add(stop.id);
                     }
-                    if (!string.IsNullOrWhiteSpace(stop.code))
-                    {
-                        existingStop.Codes[Supplier].Add(stop.code);
-                    }
                 }
                 else
                 {
                     simpleStop.Name = string.Intern(stop.name);
                     simpleStop.Ids.Add(Supplier, new List<string>() { stop.id });
-                    simpleStop.Codes.Add(Supplier, new List<string>());
-                    if (!string.IsNullOrWhiteSpace(stop.code))
-                    {
-                        simpleStop.Codes[Supplier].Add(stop.code);
-                    }
                     if (!string.IsNullOrWhiteSpace(stop.parentstation) && !stop.parentstation.Equals(stop.id, StringComparison.InvariantCultureIgnoreCase))
                     {
                         simpleStop.Ids[Supplier].Add(stop.parentstation);

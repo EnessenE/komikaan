@@ -6,6 +6,5 @@ namespace komikaan.Data.Models
     {
         public string Name { get; set; }
         public Dictionary<DataSource, List<string>> Ids { get; set; } = new Dictionary<DataSource, List<string>>();
-        public Dictionary<DataSource, List<string>> Codes { get; set; } = new Dictionary<DataSource, List<string>>();
     }
 }
