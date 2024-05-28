@@ -137,8 +137,7 @@ namespace komikaan.Context
             foreach (GTFSStop stop in finalStops)
             {
                 var convertedStop = stop.ToSimpleStop();
-                convertedStop.Ids = new Dictionary<DataSource, List<string>>();
-                convertedStop.Ids[DataSource.KomIkAan] = new List<string>() { stop.Id };
+                convertedStop.Ids = new List<string>() { stop.Id };
                 stopsToFill.Add(convertedStop);
             }
         }

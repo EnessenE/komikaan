@@ -44,7 +44,7 @@ namespace komikaan.Context
         {
             if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops == null || disruption.AffectedStops.Any(stop => stop.Ids[Supplier].First().Equals(fromStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase) || stop.Ids[Supplier].First().Equals(toStop.Ids[Supplier].First(), StringComparison.InvariantCultureIgnoreCase)));
+                var relevantDisruptions = _allDisruptions.Where(disruption => disruption.AffectedStops == null || disruption.AffectedStops.Any(stop => stop.Ids.First().Equals(fromStop.Ids.First(), StringComparison.InvariantCultureIgnoreCase) || stop.Ids.First().Equals(toStop.Ids.First(), StringComparison.InvariantCultureIgnoreCase)));
                 relevantDisruptions = relevantDisruptions.ToList().FindAll(disruption => disruption.Active);
 
                 return Task.FromResult(relevantDisruptions);
@@ -70,7 +70,7 @@ namespace komikaan.Context
         {
             if (_allStops.TryGetValue(from, out var fromStop) && _allStops.TryGetValue(to, out var toStop))
             {
-                var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Ids[Supplier].First(), toStop.Ids[Supplier].First(), cancellationToken);
+                var travelAdvice = await _nsApi.GetRouteAdvice(fromStop.Ids.First(), toStop.Ids.First(), cancellationToken);
                 var simplifiedTravelAdvices = new List<SimpleTravelAdvice>();
                 foreach (var trip in travelAdvice.trips)
                 {
@@ -203,7 +203,7 @@ namespace komikaan.Context
             {
                 var simpleStop = new SimpleStop()
                 {
-                    Ids = new Dictionary<DataSource, List<string>>() { { Supplier, new List<string>() { station.code } } },
+                    Ids =  new List<string>() { station.code },
                     Name = station.namen.lang
                 };
                 dict.Add(station.namen.lang, simpleStop);
@@ -269,8 +269,7 @@ namespace komikaan.Context
                     affectedStops.Add(new SimpleStop()
                     {
                         Name = disruptionStation.name,
-                        Ids = new Dictionary<DataSource, List<string>>()
-                            { { Supplier, new List<string>() { disruptionStation.stationCode } } },
+                        Ids = new List<string>() { disruptionStation.stationCode },
                     });
                 }
             }

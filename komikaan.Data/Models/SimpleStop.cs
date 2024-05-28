@@ -5,6 +5,6 @@ namespace komikaan.Data.Models
     public class SimpleStop
     {
         public string Name { get; set; }
-        public Dictionary<DataSource, List<string>> Ids { get; set; } = new Dictionary<DataSource, List<string>>();
+        public List<string> Ids { get; set; } = new List<string>();
     }
 }
