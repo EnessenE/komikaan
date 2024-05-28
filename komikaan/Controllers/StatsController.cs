@@ -1,11 +1,10 @@
 ﻿using komikaan.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace komikaan.Controllers
 {
     [ApiController]
-    [Route("v1/[controller]")]
+    [Route("v1/stats")]
     public class StatsController : ControllerBase
     {
         private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;

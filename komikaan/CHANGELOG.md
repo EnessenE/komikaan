@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[1.7.54] - 24-04-2024
+#### UNRELEASED
+### Added
+- GTFS support from multiple sources/countries
+### Changed
+- lowercase for controller paths
+
+[1.7.5] - 24-04-2024
 ### Changed
 - Make sure disruptions are properly detected
 - Adapt unit tests to test for these disruptions
