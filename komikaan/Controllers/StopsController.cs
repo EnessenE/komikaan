@@ -1,20 +1,24 @@
-﻿using komikaan.Data.Models;
+﻿using komikaan.Context;
+using komikaan.Data.GTFS;
+using komikaan.Data.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace komikaan.Controllers
 {
     [ApiController]
-    [Route("v1/[controller]")]
+    [Route("v1/stops")]
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
         private readonly IStopManagerService _stopManager;
+        private readonly GTFSContext _gtfs;
 
-        public StopsController(ILogger<StopsController> logger, IStopManagerService stopManager)
+        public StopsController(ILogger<StopsController> logger, IStopManagerService stopManager, GTFSContext gtfs)
         {
             _logger = logger;
             _stopManager = stopManager;
+            _gtfs = gtfs;
         }
 
         /// <summary>
@@ -35,10 +39,10 @@ namespace komikaan.Controllers
             return stops;
         }
 
-        [HttpGet("{stopId}/departures")]
-        public async Task<IEnumerable<string>> GetDeparturesAsync(string stopId)
+        [HttpGet("{stopId}/trips")]
+        public async Task<IEnumerable<GTFSStopTime>> GetDeparturesAsync(string stopId)
         {
-            return await Task.FromResult(new List<string>() { "ap", "ba", "darfwet" });
+            return await _gtfs.GetDeparturesAsync(stopId);
         }
     }
 }

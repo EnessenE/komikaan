@@ -1,4 +1,5 @@
-﻿using komikaan.Data.Models;
+﻿using System.Threading.Tasks;
+using komikaan.Data.Models;
 using komikaan.Interfaces;
 using komikaan.Models;
 
@@ -10,71 +11,46 @@ namespace komikaan.Services
         private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
         private readonly ILogger<StopManagerService> _logger;
 
-        private List<SimpleStop> _stops;
-
         public StopManagerService(IEnumerable<IDataSupplierContext> dataSuppliers, ILogger<StopManagerService> logger)
         {
             _dataSuppliers = dataSuppliers;
             _logger = logger;
         }
 
-        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync()
-        {
-            return Task.FromResult(_stops.AsEnumerable());
-        }
-
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var stops = new List<SimpleStop>();
+            _logger.LogInformation("Started stop manager");
+            await Task.CompletedTask;
 
-            _logger.LogInformation("Starting merging stops that are the same from different suppliers");
+        }
+         
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
+        public async Task<IEnumerable<SimpleStop>> FindStopsAsync(string text)
+        {
+            var stops = new List<SimpleStop>();
+            var tasks = new List<Task>();
             foreach (var supplier in _dataSuppliers)
             {
-                var newStops = await supplier.GetAllStopsAsync(cancellationToken);
-                ProcessStopsPerSupplier(newStops, stops, supplier);
+                tasks.Add(supplier.FindAsync(text, stops, CancellationToken.None));
             }
 
-            _stops = stops;
-            _logger.LogInformation("Loaded {item} stops",  _stops.Count);
-        }
+            Task searchTask = Task.WhenAll(tasks);
 
-        private void ProcessStopsPerSupplier(IEnumerable<SimpleStop> newStops, List<SimpleStop> stops, IDataSupplierContext supplier)
-        {
-            foreach (var stop in newStops)
+            await searchTask.WaitAsync(TimeSpan.FromSeconds(5));
+
+            if (searchTask.Status == TaskStatus.RanToCompletion)
+            { 
+                _logger.LogInformation("All tasks succeeded. Found {total} stops", stops.Count); 
+            }
+            else if (searchTask.Status == TaskStatus.Faulted)
             {
-                var existingStop =
-                    stops.FirstOrDefault(item => item.Name.Equals(stop.Name, StringComparison.InvariantCultureIgnoreCase));
-
-                if (existingStop != null)
-                {
-                    ModifyExistingStop(supplier, stop, existingStop);
-                }
-                else
-                {
-                    stops.Add(stop);
-                }
+                _logger.LogWarning("Atleast some tasks failed"); 
             }
-        }
-
-        private void ModifyExistingStop(IDataSupplierContext supplier, SimpleStop stop, SimpleStop existingStop)
-        {
-            if (stop.Ids.Any())
+            else
             {
-                if (!existingStop.Ids.ContainsKey(supplier.Supplier))
-                {
-                    existingStop.Ids.Add(supplier.Supplier, stop.Ids.First().Value);
-                }
-                else
-                {
-                    existingStop.Ids[supplier.Supplier].AddRange(stop.Ids.First().Value);
-                    _logger.LogInformation("Merging {name} codes from same supplier", stop.Name);
-                }
+                _logger.LogWarning("Task ended in an unexpected state {state}", searchTask.Status);
             }
-        }
-
-        public Task<IEnumerable<SimpleStop>> FindStopsAsync(string text)
-        {
-            throw new NotImplementedException();
+            return stops;
         }
     }
 }

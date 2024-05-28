@@ -1,5 +1,4 @@
-﻿using Grpc.Core;
-using komikaan.Data.Configuration;
+﻿using komikaan.Data.Configuration;
 using komikaan.Data.Enums;
 using komikaan.Data.Models;
 using komikaan.Enums;
@@ -277,6 +276,12 @@ namespace komikaan.Context
             }
 
             return affectedStops;
+        }
+
+        public async Task FindAsync(string text, List<SimpleStop> stopsToFill, CancellationToken cancellationToken)
+        {
+            stopsToFill.AddRange(_allStops.Values.Where(stop => stop.Name.Contains(text, StringComparison.InvariantCultureIgnoreCase)));
+            await Task.CompletedTask;
         }
     }
 }

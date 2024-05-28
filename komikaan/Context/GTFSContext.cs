@@ -1,9 +1,13 @@
 ﻿using System.Data;
 using Dapper;
 using komikaan.Data.Enums;
+using komikaan.Data.GTFS;
 using komikaan.Data.Models;
+using komikaan.Extensions;
 using komikaan.Interfaces;
 using komikaan.Models;
+using Npgsql;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace komikaan.Context
 {
@@ -13,7 +17,6 @@ namespace komikaan.Context
     public class GTFSContext : IDataSupplierContext
     {
         private readonly ILogger<GTFSContext> _logger;
-        private readonly IList<SimpleStop> _stops;
         private readonly IDictionary<string, GTFSStop> _gtfsStops;
 
         private readonly string _connectionString;
@@ -23,64 +26,27 @@ namespace komikaan.Context
         {
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
-            _stops = new List<SimpleStop>();
             _gtfsStops = new Dictionary<string, GTFSStop>();
         }
 
         public DataSource Supplier { get; } = DataSource.KomIkAan;
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await GenerateDataAsync();
             _logger.LogInformation("Finished reading GTFS data");
+            await Task.CompletedTask;
         }
 
-        private async Task GenerateDataAsync()
-        {
-            var data = await LoadStopsAsync();
-            GenerateStops(data);
-            _logger.LogInformation("Finished generating {simpleStops}/{gtfsStops} stops", _stops.Count, _gtfsStops.Count);
-        }
 
         private Task<IEnumerable<GTFSStop>> LoadStopsAsync()
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             var stops = dbConnection.Query<GTFSStop>(
                 @"select ""Id"", ""Code"", ""Name"", ""ParentStation"" from stops",
-                commandType: CommandType.Text, 
+                commandType: CommandType.Text,
                 buffered: true
             );
 
             return Task.FromResult(stops);
-        }
-
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        private void GenerateStops(IEnumerable<GTFSStop> stops)
-        {
-            foreach (var stop in stops)
-            {
-                _gtfsStops.Add(stop.id, stop);
-                var simpleStop = new SimpleStop();
-                var existingStop =
-                    _stops.FirstOrDefault(existingStop => existingStop.Name.Equals(stop.name, StringComparison.InvariantCultureIgnoreCase) || existingStop.Ids[Supplier].Contains(stop.parentstation, StringComparer.InvariantCultureIgnoreCase));
-                if (existingStop != null)
-                {
-                    if (!existingStop.Ids[Supplier].Contains(stop.id, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        existingStop.Ids[Supplier].Add(stop.id);
-                    }
-                }
-                else
-                {
-                    simpleStop.Name = string.Intern(stop.name);
-                    simpleStop.Ids.Add(Supplier, new List<string>() { stop.id });
-                    if (!string.IsNullOrWhiteSpace(stop.parentstation) && !stop.parentstation.Equals(stop.id, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        simpleStop.Ids[Supplier].Add(stop.parentstation);
-                    }
-                    _stops.Add(simpleStop);
-                }
-            }
         }
 
         public Task LoadRelevantDataAsync(CancellationToken cancellationToken)
@@ -99,23 +65,17 @@ namespace komikaan.Context
             return Task.FromResult(Enumerable.Empty<SimpleDisruption>());
         }
 
-        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync(CancellationToken cancellationToken)
-        {
-            return Task.FromResult(_stops.AsEnumerable());
-        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
         public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to, CancellationToken cancellationToken)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString); // Use the appropriate connection type
 
-            var simpleFromStop = _stops.FirstOrDefault(stop => stop.Name.Equals(from, StringComparison.InvariantCultureIgnoreCase));
-            var simpleToStop = _stops.FirstOrDefault(stop => stop.Name.Equals(to, StringComparison.InvariantCultureIgnoreCase));
             var searchDate = new DateTime(2024, 05, 19);
 
             _logger.LogInformation("A unrecognized stop was present {fromStop} - {toStop}", from, to);
             return await Task.FromResult<IEnumerable<SimpleTravelAdvice>>(Enumerable.Empty<SimpleTravelAdvice>());
-            
+
         }
 
 
@@ -148,7 +108,7 @@ namespace komikaan.Context
                 part.PlannedArrival = DateTime.UtcNow;
                 part.PlannedDeparture = DateTime.UtcNow.AddMinutes(5);
                 part.DepartureStation = routePart.out_stop_name;
-                if (routePartId + 1 <= route.Count-1)
+                if (routePartId + 1 <= route.Count - 1)
                 {
                     part.ArrivalStation = route[routePartId + 1].out_stop_name;
                 }
@@ -162,13 +122,37 @@ namespace komikaan.Context
             }
             travelAdvice.Route.Remove(travelAdvice.Route.Last());
         }
-    }
-}
 
-public class GTFSStop
-{
-    public string id { get; set; }
-    public string code { get; set; }
-    public string name { get; set; }
-    public string parentstation { get; set; }
+        public async Task FindAsync(string text, List<SimpleStop> stopsToFill, CancellationToken cancellationToken)
+        {
+            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+
+            var foundStops = await dbConnection.QueryAsync<GTFSStop>(
+                @"select * from search_stop(@search)",
+                new { search = text.ToLowerInvariant() },
+                commandType: CommandType.Text
+            );
+            var finalStops = foundStops?.ToList() ?? new List<GTFSStop>();
+            var stops = new List<SimpleStop>();
+            foreach (GTFSStop stop in finalStops)
+            {
+                var convertedStop = stop.ToSimpleStop();
+                convertedStop.Ids = new Dictionary<DataSource, List<string>>();
+                convertedStop.Ids[DataSource.KomIkAan] = new List<string>() { stop.Id };
+                stopsToFill.Add(convertedStop);
+            }
+        }
+
+        internal async Task<IEnumerable<GTFSStopTime>> GetDeparturesAsync(string stopId)
+        {
+            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+
+            var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
+            @"select * from get_stop_times_from_stop(@search)",
+                new { search = stopId.ToLowerInvariant() },
+                commandType: CommandType.Text
+            );
+            return foundStops;
+        }
+    }
 }

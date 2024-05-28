@@ -1,5 +1,7 @@
 ﻿using GTFS.Entities.Enumerations;
 using komikaan.Data.Enums;
+using komikaan.Data.GTFS;
+using komikaan.Data.Models;
 
 namespace komikaan.Extensions
 {
@@ -10,31 +12,39 @@ namespace komikaan.Extensions
             switch (type)
             {
                 case RouteType.Tram:
-                {
-                    return LegType.Tram;
-                }
+                    {
+                        return LegType.Tram;
+                    }
                 case RouteType.SubwayMetro:
-                {
-                    return LegType.Metro;
-                }
+                    {
+                        return LegType.Metro;
+                    }
                 case RouteType.Monorail:
                 case RouteType.Rail:
-                {
-                    return LegType.Train;
-                }
+                    {
+                        return LegType.Train;
+                    }
                 case RouteType.Bus:
-                {
-                    return LegType.Bus;
-                }
+                    {
+                        return LegType.Bus;
+                    }
                 case RouteType.Ferry:
-                {
-                    return LegType.Ferry;
-                }
+                    {
+                        return LegType.Ferry;
+                    }
                 default:
-                {
-                    return LegType.Unknown;
-                }
+                    {
+                        return LegType.Unknown;
+                    }
             }
+        }
+
+        public static SimpleStop ToSimpleStop(this GTFSStop stop)
+        {
+            return new SimpleStop
+            {
+                Name = stop.Name
+            };
         }
     }
 }
