@@ -4,10 +4,9 @@ using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.Extensions;
+using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Models;
-using Npgsql;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace komikaan.Context
 {
@@ -24,6 +23,9 @@ namespace komikaan.Context
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
         {
+            SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
+            SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler());
+
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
             _gtfsStops = new Dictionary<string, GTFSStop>();
@@ -113,7 +115,7 @@ namespace komikaan.Context
                     part.ArrivalStation = route[routePartId + 1].out_stop_name;
                 }
 
-                part.Operator = "flixbus";
+                part.Operator = "unknown help";
                 part.RealisticTransfer = true;
                 part.AlternativeTransport = false;
                 part.Type = LegType.Bus;
@@ -145,10 +147,15 @@ namespace komikaan.Context
         internal async Task<IEnumerable<GTFSStopTime>> GetDeparturesAsync(string stopId)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
-
+            //TODO: Take in account used timezone for the user
             var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
-            @"select * from get_stop_times_from_stop(@search)",
-                new { search = stopId.ToLowerInvariant() },
+            @"select * from get_stop_times_from_stop(@stop, @time, @date)",
+                new
+                {
+                    stop = stopId.ToLowerInvariant(),
+                    time = TimeOnly.FromDateTime(DateTime.Now),
+                    date = DateOnly.FromDateTime(DateTime.Now.Date),
+                },
                 commandType: CommandType.Text
             );
             return foundStops;
