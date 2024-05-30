@@ -160,5 +160,20 @@ namespace komikaan.Context
             );
             return foundStops;
         }
+
+        internal async Task<IEnumerable<GTFSTripStop>> GetTripAsync(string tripId)
+        {
+            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            //TODO: Take in account used timezone for the user
+            var foundStops = await dbConnection.QueryAsync<GTFSTripStop>(
+            @"select * from get_stop_times_for_trip(@tripid)",
+                new
+                {
+                    tripid = tripId
+                },
+                commandType: CommandType.Text
+            );
+            return foundStops;
+        }
     }
 }
