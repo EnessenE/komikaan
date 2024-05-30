@@ -10,6 +10,8 @@ namespace komikaan.Data.GTFS
         public TimeOnly? Departure { get; set; }
         public string PlatformCode { get; set; }
         public string StopHeadsign { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
         public TimeOnly? ActualArrivalTime { get => Arrival; }
         public TimeOnly? ActualDepartureTime { get => Departure; }
         public TimeOnly? PlannedArrivalTime { get => Arrival; }
