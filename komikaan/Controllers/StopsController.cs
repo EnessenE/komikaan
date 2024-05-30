@@ -39,10 +39,10 @@ namespace komikaan.Controllers
             return stops;
         }
 
-        [HttpGet("{stopId}/trips")]
-        public async Task<IEnumerable<GTFSStopTime>> GetDeparturesAsync(string stopId)
+        [HttpGet("{stopId}")]
+        public async Task<GTFSStopData> GetDeparturesAsync(string stopId)
         {
-            return await _gtfs.GetDeparturesAsync(stopId);
+            return await _gtfs.GetStopAsync(stopId);
         }
     }
 }

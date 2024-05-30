@@ -1,7 +1,5 @@
 ﻿using komikaan.Context;
 using komikaan.Data.GTFS;
-using komikaan.Data.Models;
-using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace komikaan.Controllers
@@ -21,9 +19,11 @@ namespace komikaan.Controllers
 
 
         [HttpGet("{tripid}/")]
-        public async Task<IEnumerable<GTFSTripStop>> GetTripAsync(string tripId)
+        public async Task<GTFSTrip> GetTripAsync(string tripId)
         {
-            return await _gtfs.GetTripAsync(tripId);
+            var trip = await _gtfs.GetTripAsync(tripId);
+
+            return trip;
         }
     }
 }

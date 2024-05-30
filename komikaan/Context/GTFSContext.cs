@@ -144,9 +144,45 @@ namespace komikaan.Context
             }
         }
 
-        internal async Task<IEnumerable<GTFSStopTime>> GetDeparturesAsync(string stopId)
+        internal async Task<GTFSTrip> GetTripAsync(string tripId)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            //TODO: Take in account the relative timezone for us + user
+
+            var trip = await dbConnection.QueryFirstAsync<GTFSTrip>(
+            @"select * from get_trip_from_id(@tripid) LIMIT 1",
+                new
+                {
+                    tripid = tripId
+                },
+                commandType: CommandType.Text
+            );
+            var foundStops = await dbConnection.QueryAsync<GTFSTripStop>(
+            @"select * from get_stop_times_for_trip(@tripid)",
+                new
+                {
+                    tripid = tripId
+                },
+                commandType: CommandType.Text
+            );
+            trip.Stops = foundStops;
+
+            return trip;
+        }
+
+        internal async Task<GTFSStopData> GetStopAsync(string stopId)
+        {
+            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+
+            var stop = await dbConnection.QueryFirstAsync<GTFSStopData>(
+            @"select * from get_stop_from_id(@stopid) LIMIT 1",
+                new
+                {
+                    stopid = stopId
+                },
+                commandType: CommandType.Text
+            );
+
             //TODO: Take in account used timezone for the user
             var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
             @"select * from get_stop_times_from_stop(@stop, @time, @date)",
@@ -158,22 +194,18 @@ namespace komikaan.Context
                 },
                 commandType: CommandType.Text
             );
-            return foundStops;
-        }
+            stop.Departures = foundStops;
 
-        internal async Task<IEnumerable<GTFSTripStop>> GetTripAsync(string tripId)
-        {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
-            //TODO: Take in account used timezone for the user
-            var foundStops = await dbConnection.QueryAsync<GTFSTripStop>(
-            @"select * from get_stop_times_for_trip(@tripid)",
+            stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
+            @"select * from get_related_stops(@stop)",
                 new
                 {
-                    tripid = tripId
+                    stop = stopId.ToLowerInvariant(),
                 },
                 commandType: CommandType.Text
             );
-            return foundStops;
+
+            return stop;
         }
     }
 }

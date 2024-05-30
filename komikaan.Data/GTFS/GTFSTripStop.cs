@@ -1,4 +1,5 @@
-﻿namespace komikaan.Data.GTFS
+﻿
+namespace komikaan.Data.GTFS
 {
     public class GTFSTripStop
     {
@@ -8,6 +9,7 @@
         public TimeOnly? Arrival { get; set; }
         public TimeOnly? Departure { get; set; }
         public string PlatformCode { get; set; }
+        public string StopHeadsign { get; set; }
         public TimeOnly? ActualArrivalTime { get => Arrival; }
         public TimeOnly? ActualDepartureTime { get => Departure; }
         public TimeOnly? PlannedArrivalTime { get => Arrival; }
