@@ -1,4 +1,6 @@
 ﻿
+using GTFS.Entities;
+
 namespace komikaan.Data.GTFS
 {
     public class GTFSTrip
@@ -12,5 +14,7 @@ namespace komikaan.Data.GTFS
         public string? BlockId { get; set; }
         public string? DataOrigin { get; set; }
         public IEnumerable<GTFSTripStop>? Stops { get; set; }
+
+        public IEnumerable<Shape>? Shapes { get; set; }
     }
 }

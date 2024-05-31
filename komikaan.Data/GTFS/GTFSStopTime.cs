@@ -20,5 +20,10 @@
         public string PlannedPlatform { get => Platform; }
         public string ActualPlatform { get=> Platform; }
         public string Platform { get; set; }
+        public string RouteUrl { get; set; }
+        public string RouteType { get; set; }
+        public string RouteDesc { get; set; }
+        public string RouteColor { get; set; }
+        public string RouteTextColor { get; set; }
     }
 }

@@ -1,4 +1,6 @@
 ﻿
+using GTFS.Entities;
+
 namespace komikaan.Data.GTFS
 {
     public class GTFSTripStop
@@ -15,7 +17,7 @@ namespace komikaan.Data.GTFS
         public TimeOnly? ActualArrivalTime { get => Arrival; }
         public TimeOnly? ActualDepartureTime { get => Departure; }
         public TimeOnly? PlannedArrivalTime { get => Arrival; }
-        public TimeOnly? plannedDepartureTime { get => Departure; }
+        public TimeOnly? PlannedDepartureTime { get => Departure; }
         public string PlannedPlatform { get => PlatformCode; }
         public string ActualPlatform { get => PlatformCode; }
     }

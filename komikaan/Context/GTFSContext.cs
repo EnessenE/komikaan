@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Dapper;
+using GTFS.Entities;
 using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
@@ -166,6 +167,15 @@ namespace komikaan.Context
                 commandType: CommandType.Text
             );
             trip.Stops = foundStops;
+            var shapes = await dbConnection.QueryAsync<Shape>(
+            @"select * from get_shapes_from_trip(@tripid)",
+                new
+                {
+                    tripid = tripId
+                },
+                commandType: CommandType.Text
+            );
+            trip.Shapes = shapes;
 
             return trip;
         }
@@ -196,14 +206,14 @@ namespace komikaan.Context
             );
             stop.Departures = foundStops;
 
-            stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
-            @"select * from get_related_stops(@stop)",
-                new
-                {
-                    stop = stopId.ToLowerInvariant(),
-                },
-                commandType: CommandType.Text
-            );
+            //stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
+            //@"select * from get_ related_stops(@stop)",
+            //    new
+            //    {
+            //        stop = stopId.ToLowerInvariant(),
+            //    },
+            //    commandType: CommandType.Text
+            //);
 
             return stop;
         }
