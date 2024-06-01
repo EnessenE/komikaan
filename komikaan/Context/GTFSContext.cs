@@ -27,6 +27,8 @@ namespace komikaan.Context
             SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
             SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler());
 
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
             _gtfsStops = new Dictionary<string, GTFSStop>();
