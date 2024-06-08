@@ -17,7 +17,6 @@ namespace komikaan.Context
     public class GTFSContext : IDataSupplierContext
     {
         private readonly ILogger<GTFSContext> _logger;
-        private readonly IDictionary<string, GTFSStop> _gtfsStops;
 
         private readonly string _connectionString;
 
@@ -31,7 +30,6 @@ namespace komikaan.Context
 
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
-            _gtfsStops = new Dictionary<string, GTFSStop>();
         }
 
         public DataSource Supplier { get; } = DataSource.KomIkAan;
