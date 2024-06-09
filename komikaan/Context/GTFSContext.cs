@@ -206,14 +206,14 @@ namespace komikaan.Context
             );
             stop.Departures = foundStops;
 
-            //stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
-            //@"select * from get_ related_stops(@stop)",
-            //    new
-            //    {
-            //        stop = stopId.ToLowerInvariant(),
-            //    },
-            //    commandType: CommandType.Text
-            //);
+            stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
+            @"select * from get_related_stops(@stop)",
+                new
+                {
+                    stop = stopId.ToLowerInvariant(),
+                },
+                commandType: CommandType.Text
+            );
 
             return stop;
         }

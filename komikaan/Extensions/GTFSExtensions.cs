@@ -43,7 +43,8 @@ namespace komikaan.Extensions
         {
             return new SimpleStop
             {
-                Name = stop.Name
+                Name = stop.Name,
+                StopType = stop.StopType
             };
         }
     }
