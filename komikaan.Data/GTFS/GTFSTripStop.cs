@@ -14,6 +14,7 @@ namespace komikaan.Data.GTFS
         public string StopHeadsign { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public StopType StopType { get; set; }
         public TimeOnly? ActualArrivalTime { get => Arrival; }
         public TimeOnly? ActualDepartureTime { get => Departure; }
         public TimeOnly? PlannedArrivalTime { get => Arrival; }

@@ -180,25 +180,27 @@ namespace komikaan.Context
             return trip;
         }
 
-        internal async Task<GTFSStopData> GetStopAsync(string stopId)
+        internal async Task<GTFSStopData> GetStopAsync(string stopId, StopType stopType)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
 
             var stop = await dbConnection.QueryFirstAsync<GTFSStopData>(
-            @"select * from get_stop_from_id(@stopid) LIMIT 1",
+            @"select * from get_stop_from_id(@stopid, @stop_type) LIMIT 1",
                 new
                 {
-                    stopid = stopId
+                    stopid = stopId,
+                    stop_type = stopType
                 },
                 commandType: CommandType.Text
             );
 
             //TODO: Take in account used timezone for the user
             var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
-            @"select * from get_stop_times_from_stop(@stop, @time, @date)",
+            @"select * from get_stop_times_from_stop(@stop, @stop_type, @time, @date)",
                 new
                 {
                     stop = stopId.ToLowerInvariant(),
+                    stop_type = stopType,
                     time = TimeOnly.FromDateTime(DateTime.Now),
                     date = DateOnly.FromDateTime(DateTime.Now.Date),
                 },
