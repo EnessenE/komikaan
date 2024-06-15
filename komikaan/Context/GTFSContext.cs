@@ -140,7 +140,7 @@ namespace komikaan.Context
             foreach (GTFSStop stop in finalStops)
             {
                 var convertedStop = stop.ToSimpleStop();
-                convertedStop.Ids = new List<string>() { stop.Id };
+                convertedStop.Ids = new List<string>() { stop.PrimaryStop };
                 stopsToFill.Add(convertedStop);
             }
         }
@@ -209,10 +209,11 @@ namespace komikaan.Context
             stop.Departures = foundStops;
 
             stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
-            @"select * from get_related_stops(@stop)",
+            @"select * from get_related_stops(@stop, @stop_type)",
                 new
                 {
                     stop = stopId.ToLowerInvariant(),
+                    stop_type = stopType
                 },
                 commandType: CommandType.Text
             );
