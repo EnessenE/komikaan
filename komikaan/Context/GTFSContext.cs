@@ -14,6 +14,7 @@ namespace komikaan.Context
     //Random code to mess around with GTFS data
     // Very inefficient and not-prod ready
     // Essentially brute forcing to have fun
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
     public class GTFSContext : IDataSupplierContext
     {
         private readonly ILogger<GTFSContext> _logger;
@@ -217,6 +218,26 @@ namespace komikaan.Context
                 },
                 commandType: CommandType.Text
             );
+
+            var keptStations = new List<GTFSStopData>();
+
+            foreach (var relatedStop in stop.RelatedStops)
+            {
+                if (!keptStations.Exists(relatedUnfiltered => relatedUnfiltered.StopType == relatedStop.StopType))
+                {
+                    keptStations.Add(relatedStop);
+                }
+                else
+                {
+                    if (keptStations.Any(filteredStop => filteredStop.StopType == relatedStop.StopType && (!string.IsNullOrEmpty(relatedStop.ParentStation) && string.IsNullOrEmpty(filteredStop.ParentStation)))){
+                        _logger.LogInformation("Showing a nicer station name from a parent");
+                        keptStations.RemoveAll(filteredStop => filteredStop.StopType == relatedStop.StopType);
+                        keptStations.Add(relatedStop);
+                    }
+                }
+            }
+
+            stop.RelatedStops = keptStations;
 
             return stop;
         }
