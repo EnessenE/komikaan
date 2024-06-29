@@ -129,7 +129,10 @@ internal class Program
 
     private static void AddDataSuppliers(WebApplicationBuilder builder)
     {
-        builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
+        //builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
+        builder.Services.AddSingleton<IDataSupplierContext, GTFSContext>();
+        //TODO: BAD, ONLY FOR TESTING. CREATES 2 INSTANCES
+        builder.Services.AddSingleton<GTFSContext>();
     }
 
     private static void SetupApplication(WebApplicationBuilder builder, string corsName)

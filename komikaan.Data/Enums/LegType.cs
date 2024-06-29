@@ -13,6 +13,7 @@ namespace komikaan.Data.Enums
         Feet,
         Bicycle,
         Metro,
-        Ferry
+        Ferry,
+        Tram
     }
 }

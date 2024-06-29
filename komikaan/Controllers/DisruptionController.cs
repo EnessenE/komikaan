@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace komikaan.Controllers
 {
     [ApiController]
-    [Route("v1/[controller]")]
+    [Route("v1/disruption")]
     public class DisruptionController : ControllerBase
     {
         private readonly ITravelAdviceHandler _travelAdviceHandler;
