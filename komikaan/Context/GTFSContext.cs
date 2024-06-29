@@ -146,7 +146,7 @@ namespace komikaan.Context
             }
         }
 
-        internal async Task<GTFSTrip> GetTripAsync(string tripId)
+        internal async Task<GTFSTrip> GetTripAsync(Guid tripId)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             //TODO: Take in account the relative timezone for us + user
@@ -181,7 +181,7 @@ namespace komikaan.Context
             return trip;
         }
 
-        internal async Task<GTFSStopData> GetStopAsync(string stopId, StopType stopType)
+        internal async Task<GTFSStopData> GetStopAsync(Guid stopId, StopType stopType)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
 
@@ -200,7 +200,7 @@ namespace komikaan.Context
             @"select * from get_stop_times_from_stop(@stop, @stop_type, @time, @date)",
                 new
                 {
-                    stop = stopId.ToLowerInvariant(),
+                    stop = stopId,
                     stop_type = stopType,
                     time = TimeOnly.FromDateTime(DateTime.Now),
                     date = DateOnly.FromDateTime(DateTime.Now.Date),
@@ -213,7 +213,7 @@ namespace komikaan.Context
             @"select * from get_related_stops(@stop, @stop_type)",
                 new
                 {
-                    stop = stopId.ToLowerInvariant(),
+                    stop = stopId,
                     stop_type = stopType
                 },
                 commandType: CommandType.Text

@@ -19,7 +19,7 @@ namespace komikaan.Controllers
 
 
         [HttpGet("{tripid}/")]
-        public async Task<GTFSTrip> GetTripAsync(string tripId)
+        public async Task<GTFSTrip> GetTripAsync(Guid tripId)
         {
             var trip = await _gtfs.GetTripAsync(tripId);
 
