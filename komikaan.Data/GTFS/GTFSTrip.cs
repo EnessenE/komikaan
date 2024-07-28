@@ -1,4 +1,6 @@
-﻿namespace komikaan.Data.GTFS
+﻿using GTFS.Entities;
+
+namespace komikaan.Data.GTFS
 {
     public class GTFSTrip
     {
