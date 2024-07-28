@@ -13,8 +13,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\GTFS\src\GTFS\GTFS.csproj" />
-  </ItemGroup>
-
 </Project>

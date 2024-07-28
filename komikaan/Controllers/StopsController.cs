@@ -11,13 +11,13 @@ namespace komikaan.Controllers
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
-        private readonly IStopManagerService _stopManager;
+        private readonly IDataSupplierContext _dataSupplier;
         private readonly GTFSContext _gtfs;
 
-        public StopsController(ILogger<StopsController> logger, IStopManagerService stopManager, GTFSContext gtfs)
+        public StopsController(ILogger<StopsController> logger, IDataSupplierContext dataSupplierContext, GTFSContext gtfs)
         {
             _logger = logger;
-            _stopManager = stopManager;
+            _dataSupplier = dataSupplierContext;
             _gtfs = gtfs;
         }
 
@@ -29,7 +29,7 @@ namespace komikaan.Controllers
         public async Task<IEnumerable<SimpleStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
-            var stops = await _stopManager.FindStopsAsync(filter);
+            var stops = await _dataSupplier.FindAsync(filter, CancellationToken.None);
 
             foreach (var found in stops)
             {

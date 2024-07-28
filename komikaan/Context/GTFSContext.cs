@@ -83,51 +83,7 @@ namespace komikaan.Context
         }
 
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        private static void CalculateRoute(List<RouteInfo> route, SimpleTravelAdvice travelAdvice)
-        {
-            for (var routePartId = 0; routePartId < route.Count; routePartId++)
-            {
-                var routePart = route[routePartId];
-                var part = new SimpleRoutePart();
-
-                // part.LineName = tripTime.route_short_name;
-                // part.Direction = tripTime.trip_headsign;
-                // part.PlannedDepartureTrack = tripTime.platform_code_start?.ToString();
-                // part.PlannedArrivalTrack = tripTime.platform_code_end?.ToString();
-                // part.PlannedArrival = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow),
-                //     new TimeOnly(tripTime.arrival_time_end.Hours, tripTime.arrival_time_end.Minutes,
-                //         tripTime.arrival_time_end.Seconds));
-                // part.PlannedDeparture = new DateTime(DateOnly.FromDateTime(DateTime.UtcNow),
-                //     new TimeOnly(tripTime.departure_time_start.Hours, tripTime.departure_time_start.Minutes,
-                //         tripTime.departure_time_start.Seconds));
-                // part.DepartureStation = tripTime.stop_name_start;
-                // part.ArrivalStation = tripTime.stop_name_end;
-                // part.Operator = tripTime.agency_name;
-                // part.RealisticTransfer = true;
-                // part.AlternativeTransport = false;
-                // part.Type = tripTime.route_type?.ToLegType() ?? LegType.Unknown;
-
-
-                part.PlannedArrival = DateTime.UtcNow;
-                part.PlannedDeparture = DateTime.UtcNow.AddMinutes(5);
-                part.DepartureStation = routePart.out_stop_name;
-                if (routePartId + 1 <= route.Count - 1)
-                {
-                    part.ArrivalStation = route[routePartId + 1].out_stop_name;
-                }
-
-                part.Operator = "unknown help";
-                part.RealisticTransfer = true;
-                part.AlternativeTransport = false;
-                part.Type = LegType.Bus;
-
-                travelAdvice.Route.Add(part);
-            }
-            travelAdvice.Route.Remove(travelAdvice.Route.Last());
-        }
-
-        public async Task FindAsync(string text, List<SimpleStop> stopsToFill, CancellationToken cancellationToken)
+        public async Task<IEnumerable<SimpleStop>> FindAsync(string text, CancellationToken cancellationToken)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
 
@@ -137,13 +93,14 @@ namespace komikaan.Context
                 commandType: CommandType.Text
             );
             var finalStops = foundStops?.ToList() ?? new List<GTFSStop>();
-            var stops = new List<SimpleStop>();
+            var stopsToFill = new List<SimpleStop>();
             foreach (GTFSStop stop in finalStops)
             {
                 var convertedStop = stop.ToSimpleStop();
                 convertedStop.Ids = new List<string>() { stop.PrimaryStop };
                 stopsToFill.Add(convertedStop);
             }
+            return stopsToFill;
         }
 
         internal async Task<GTFSTrip> GetTripAsync(Guid tripId)
