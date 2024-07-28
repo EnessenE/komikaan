@@ -73,5 +73,10 @@ namespace komikaan.Tests.Stubs
         {
             return Task.FromResult(_travelAdvices.AsEnumerable());
         }
+
+        public Task<IEnumerable<SimpleStop>> FindAsync(string text, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

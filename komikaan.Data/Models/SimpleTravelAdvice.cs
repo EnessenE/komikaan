@@ -10,8 +10,8 @@ namespace komikaan.Models
 
         public List<SimpleRoutePart> Route { get; set; }
 
-        public int PlannedDurationInMinutes { get; set; }
+        public double PlannedDurationInMinutes { get; set; }
 
-        public int ActualDurationInMinutes { get; set; }
+        public double? ActualDurationInMinutes { get; set; }
     }
 }
