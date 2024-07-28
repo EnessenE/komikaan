@@ -3,5 +3,6 @@
 public enum DataSource
 {
     Unknown,
-    NederlandseSpoorwegen
+    NederlandseSpoorwegen,
+    KomIkAan
 }
