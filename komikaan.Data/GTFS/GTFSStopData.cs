@@ -14,6 +14,8 @@ namespace komikaan.Data.GTFS
         public string ParentStation { get; set; }
         public string PlatformCode { get; set; }
         public string DataOrigin { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public IEnumerable<GTFSRoute>? Routes { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public StopType StopType { get; set; }
