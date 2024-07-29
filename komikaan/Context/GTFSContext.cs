@@ -154,13 +154,12 @@ namespace komikaan.Context
 
             //TODO: Take in account used timezone for the user
             var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
-            @"select * from get_stop_times_from_stop(@stop, @stop_type, @time, @date)",
+            @"select * from get_stop_times_from_stop(@stop, @stop_type, @time)",
                 new
                 {
                     stop = stopId,
                     stop_type = stopType,
-                    time = TimeOnly.FromDateTime(DateTime.Now),
-                    date = DateOnly.FromDateTime(DateTime.Now.Date),
+                    time = DateTimeOffset.UtcNow.AddMinutes(-2)
                 },
                 commandType: CommandType.Text
             );
