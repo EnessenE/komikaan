@@ -8,6 +8,7 @@ using komikaan.Extensions;
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Models;
+using komikaan.Models.API.NS;
 
 namespace komikaan.Context
 {
@@ -38,19 +39,6 @@ namespace komikaan.Context
         {
             _logger.LogInformation("Finished reading GTFS data");
             await Task.CompletedTask;
-        }
-
-
-        private Task<IEnumerable<GTFSStop>> LoadStopsAsync()
-        {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
-            var stops = dbConnection.Query<GTFSStop>(
-                @"select ""Id"", ""Code"", ""Name"", ""ParentStation"" from stops",
-                commandType: CommandType.Text,
-                buffered: true
-            );
-
-            return Task.FromResult(stops);
         }
 
         public Task LoadRelevantDataAsync(CancellationToken cancellationToken)
@@ -103,7 +91,7 @@ namespace komikaan.Context
             return stopsToFill;
         }
 
-        internal async Task<GTFSTrip> GetTripAsync(Guid tripId)
+        internal async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             //TODO: Take in account the relative timezone for us + user
@@ -124,6 +112,22 @@ namespace komikaan.Context
                 },
                 commandType: CommandType.Text
             );
+            // This is hack, we need a "calibration" point for the time as we can't get it from the DB and summer time is a thing
+            // Note, this will horribly break around summer/winter time switches
+            DateTimeOffset? previousArrival = null;
+            DateTimeOffset? previousDeparture = null;
+            int offset = 0;
+            foreach (GTFSTripStop stop in foundStops)
+            {
+                var newArrival = forceDate(offset, stop.Arrival, previousArrival);
+                previousArrival = stop.Arrival;
+                stop.Arrival = newArrival;
+
+                var newDep = forceDate(offset, stop.Departure, previousDeparture);
+                previousDeparture = stop.Departure;
+                stop.Departure = newDep;
+            }
+
             trip.Stops = foundStops;
             var shapes = await dbConnection.QueryAsync<Shape>(
             @"select * from get_shapes_from_trip(@tripid)",
@@ -136,6 +140,18 @@ namespace komikaan.Context
             trip.Shapes = shapes;
 
             return trip;
+        }
+
+        private DateTimeOffset? forceDate(int offset, DateTimeOffset? date, DateTimeOffset? previous)
+        {
+            if (date != null)
+            {
+                var newArrival = date.Value.AddYears(DateTimeOffset.UtcNow.Year-1);
+                newArrival = newArrival.AddMonths(DateTimeOffset.UtcNow.Month-1);
+                newArrival = newArrival.AddDays(DateTimeOffset.UtcNow.Day - 1);
+                return newArrival;
+            }
+            return null;
         }
 
         internal async Task<GTFSStopData> GetStopAsync(Guid stopId, StopType stopType)
@@ -185,7 +201,8 @@ namespace komikaan.Context
                 }
                 else
                 {
-                    if (keptStations.Any(filteredStop => filteredStop.StopType == relatedStop.StopType && (!string.IsNullOrEmpty(relatedStop.ParentStation) && string.IsNullOrEmpty(filteredStop.ParentStation)))){
+                    if (keptStations.Any(filteredStop => filteredStop.StopType == relatedStop.StopType && (!string.IsNullOrEmpty(relatedStop.ParentStation) && string.IsNullOrEmpty(filteredStop.ParentStation))))
+                    {
                         _logger.LogInformation("Showing a nicer station name from a parent");
                         keptStations.RemoveAll(filteredStop => filteredStop.StopType == relatedStop.StopType);
                         keptStations.Add(relatedStop);
