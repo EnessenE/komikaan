@@ -3,13 +3,13 @@
     public class GTFSStopTime
     {
         public string TripId { get; set; }
-        public TimeOnly? ActualArrivalTime { get => ArrivalTime; }
-        public TimeOnly? ActualDepartureTime { get => DepartureTime; }
-        public TimeOnly? PlannedArrivalTime { get => ArrivalTime; }
-        public TimeOnly? plannedDepartureTime { get => DepartureTime;  }
+        public DateTimeOffset? ActualArrivalTime { get => ArrivalTime; }
+        public DateTimeOffset? ActualDepartureTime { get => DepartureTime; }
+        public DateTimeOffset? PlannedArrivalTime { get => ArrivalTime; }
+        public DateTimeOffset? plannedDepartureTime { get => DepartureTime;  }
 
-        public TimeOnly? ArrivalTime { get; set; }
-        public TimeOnly? DepartureTime { get; set; }
+        public DateTimeOffset? ArrivalTime { get; set; }
+        public DateTimeOffset? DepartureTime { get; set; }
         public string StopHeadsign { get; set; }
         public string Headsign { get; set; }
         public string Shortname { get; set; }
