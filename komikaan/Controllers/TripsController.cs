@@ -19,9 +19,10 @@ namespace komikaan.Controllers
 
 
         [HttpGet("{tripid}/")]
-        public async Task<GTFSTrip> GetTripAsync(Guid tripId)
+        public async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset? date)
         {
-            var trip = await _gtfs.GetTripAsync(tripId);
+            var setDate = date ?? DateTimeOffset.UtcNow;
+            var trip = await _gtfs.GetTripAsync(tripId, setDate);
 
             return trip;
         }
