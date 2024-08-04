@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.4.0] - 04-08-2024
+### Added
+- Get nearby stops from coordinates
+### Removed
+- Remove SimpleStops and replace the with GTFSStops
+
 [2.1.1] - 29-07-2024
 ### Added
 - List amount of merged stops for a stop

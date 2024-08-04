@@ -22,8 +22,8 @@ The following is a really simplistic overview of the current structure of the pr
 - Irrigator*
     - Responsible for retrieving and processing GTFS realtime data
     - Responsible for writing the realtime data to the database 
-- PSQL-GTFS-multisourced*
-    - Working name for the database where the GTFS end up in
+- GTFS-PSQL-Multisourced*
+    - Working name for the database where the GTFS ends up in
 
 (*) Projects that are not opensource <b>yet</b>
 

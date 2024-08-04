@@ -38,14 +38,5 @@ namespace komikaan.Extensions
                     }
             }
         }
-
-        public static SimpleStop ToSimpleStop(this GTFSStop stop)
-        {
-            return new SimpleStop
-            {
-                Name = stop.Name,
-                StopType = stop.StopType
-            };
-        }
     }
 }
