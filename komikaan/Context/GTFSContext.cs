@@ -9,6 +9,10 @@ using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Models;
 using komikaan.Models.API.NS;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.Geometries.Implementation;
+using Npgsql;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace komikaan.Context
 {
@@ -21,17 +25,24 @@ namespace komikaan.Context
         private readonly ILogger<GTFSContext> _logger;
 
         private readonly string _connectionString;
+        private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
         {
             SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
             SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler());
-
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
+
+
+            _dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
+            _dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true); 
+            _dataSourceBuilder.UseGeoJson();
+
+
         }
 
         public DataSource Supplier { get; } = DataSource.KomIkAan;
@@ -70,8 +81,7 @@ namespace komikaan.Context
 
         }
 
-
-        public async Task<IEnumerable<SimpleStop>> FindAsync(string text, CancellationToken cancellationToken)
+        public async Task<IEnumerable<GTFSStop>> FindAsync(string text, CancellationToken cancellationToken)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
 
@@ -80,15 +90,7 @@ namespace komikaan.Context
                 new { search = text.ToLowerInvariant() },
                 commandType: CommandType.Text
             );
-            var finalStops = foundStops?.ToList() ?? new List<GTFSStop>();
-            var stopsToFill = new List<SimpleStop>();
-            foreach (GTFSStop stop in finalStops)
-            {
-                var convertedStop = stop.ToSimpleStop();
-                convertedStop.Ids = new List<string>() { stop.PrimaryStop };
-                stopsToFill.Add(convertedStop);
-            }
-            return stopsToFill;
+            return foundStops;
         }
 
         internal async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date)
@@ -146,8 +148,8 @@ namespace komikaan.Context
         {
             if (date != null)
             {
-                var newArrival = date.Value.AddYears(DateTimeOffset.UtcNow.Year-1);
-                newArrival = newArrival.AddMonths(DateTimeOffset.UtcNow.Month-1);
+                var newArrival = date.Value.AddYears(DateTimeOffset.UtcNow.Year - 1);
+                newArrival = newArrival.AddMonths(DateTimeOffset.UtcNow.Month - 1);
                 newArrival = newArrival.AddDays(DateTimeOffset.UtcNow.Day - 1);
                 return newArrival;
             }
@@ -213,6 +215,17 @@ namespace komikaan.Context
             stop.RelatedStops = keptStations;
 
             return stop;
+        }
+
+        public async Task<IEnumerable<GTFSStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
+        {
+            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var foundStops = await connection.QueryAsync<GTFSStop>(
+            @"select * from nearby_stops(@latitude, @longitude)",
+                new { longitude = longitude, latitude = latitude },
+                commandType: CommandType.Text
+            );
+            return foundStops;
         }
     }
 }

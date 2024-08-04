@@ -1,7 +1,9 @@
 ﻿using komikaan.Data.Enums;
+using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.Models;
 using komikaan.Models.API.NS;
+using NetTopologySuite.Geometries;
 
 namespace komikaan.Interfaces;
 
@@ -21,6 +23,7 @@ public interface IDataSupplierContext
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1564:Parameter in public or internal member is of type bool or bool?", Justification = "We are selecting data for active / inactive disruptions. This is intended")]
     Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active, CancellationToken cancellationToken);
-    Task<IEnumerable<SimpleStop>> FindAsync(string text, CancellationToken cancellationToken);
+    Task<IEnumerable<GTFSStop>> FindAsync(string text, CancellationToken cancellationToken);
     Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to, CancellationToken cancellationToken);
+    Task<IEnumerable<GTFSStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken);
 }

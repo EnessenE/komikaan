@@ -3,6 +3,7 @@ using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using NetTopologySuite.Geometries;
 
 namespace komikaan.Controllers
 {
@@ -26,14 +27,14 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<SimpleStop>> SearchStopsAsync(string filter)
+        public async Task<IEnumerable<GTFSStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
             var stops = await _dataSupplier.FindAsync(filter, CancellationToken.None);
 
             foreach (var found in stops)
             {
-                _logger.LogInformation("Found {id} {name}", found.Ids, found.Name);
+                _logger.LogInformation("Found {id} {name}", found.Id, found.Name);
             }
 
             return stops;
@@ -43,6 +44,18 @@ namespace komikaan.Controllers
         public async Task<GTFSStopData> GetDeparturesAsync(Guid stopId, StopType stopType)
         {
             return await _gtfs.GetStopAsync(stopId, stopType);
+        }
+
+        /// <summary>
+        /// Based on coordinates, get all nearby stops 
+        /// </summary>
+        /// <param name="longitude">Longitude coordinate</param>
+        /// <param name="latitude">Latitude coordinate</param>
+        /// <returns></returns>
+        [HttpGet("nearby")]
+        public async Task<IEnumerable<GTFSStop>> NearbyStopsAsync(double longitude, double latitude)
+        {
+            return await _dataSupplier.GetNearbyStopsAsync(longitude, latitude, CancellationToken.None);
         }
     }
 }
