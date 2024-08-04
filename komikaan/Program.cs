@@ -11,6 +11,10 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Diagnostics.Metrics;
 using System.Diagnostics;
+using GeoAPI;
+using NetTopologySuite.Geometries.Implementation;
+using NetTopologySuite.Geometries;
+using NetTopologySuite;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "I dont like top levels, will receive a reformat ever.")]
 internal class Program
@@ -18,7 +22,6 @@ internal class Program
     public static void Main(string[] args)
     {
         var meter = new Meter("komikaan.api", "1.0.0");
-
 
         var builder = WebApplication.CreateBuilder(args);
 

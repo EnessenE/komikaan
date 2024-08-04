@@ -1,4 +1,5 @@
 ﻿using komikaan.Data.Enums;
+using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.Interfaces;
 using komikaan.Models;
@@ -59,7 +60,7 @@ namespace komikaan.Tests.Stubs
             return Task.FromResult(_disruptions.AsEnumerable());
         }
 
-        public Task<IEnumerable<SimpleStop>> GetAllStopsAsync(CancellationToken cancellationToken)
+        public Task<IEnumerable<GTFSStop>> GetAllStopsAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -74,7 +75,12 @@ namespace komikaan.Tests.Stubs
             return Task.FromResult(_travelAdvices.AsEnumerable());
         }
 
-        public Task<IEnumerable<SimpleStop>> FindAsync(string text, CancellationToken cancellationToken)
+        public Task<IEnumerable<GTFSStop>> FindAsync(string text, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<GTFSStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
