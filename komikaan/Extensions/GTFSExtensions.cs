@@ -1,7 +1,5 @@
 ﻿using GTFS.Entities.Enumerations;
 using komikaan.Data.Enums;
-using komikaan.Data.GTFS;
-using komikaan.Data.Models;
 
 namespace komikaan.Extensions
 {

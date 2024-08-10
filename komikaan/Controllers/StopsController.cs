@@ -1,9 +1,8 @@
-﻿using komikaan.Context;
+﻿using System.Diagnostics;
+using komikaan.Context;
 using komikaan.Data.GTFS;
-using komikaan.Data.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using NetTopologySuite.Geometries;
 
 namespace komikaan.Controllers
 {
@@ -12,14 +11,12 @@ namespace komikaan.Controllers
     public class StopsController : ControllerBase
     {
         private readonly ILogger<StopsController> _logger;
-        private readonly IDataSupplierContext _dataSupplier;
-        private readonly GTFSContext _gtfs;
+        private readonly IGTFSContext _dataSupplier;
 
-        public StopsController(ILogger<StopsController> logger, IDataSupplierContext dataSupplierContext, GTFSContext gtfs)
+        public StopsController(ILogger<StopsController> logger, IGTFSContext dataSupplierContext)
         {
             _logger = logger;
             _dataSupplier = dataSupplierContext;
-            _gtfs = gtfs;
         }
 
         /// <summary>
@@ -41,9 +38,25 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{stopId}/{stopType}")]
-        public async Task<GTFSStopData> GetDeparturesAsync(Guid stopId, StopType stopType)
+        public async Task<GTFSStopData?> GetDeparturesAsync(Guid stopId, StopType stopType)
         {
-            return await _gtfs.GetStopAsync(stopId, stopType);
+            //TODO: 404
+            return await _dataSupplier.GetStopAsync(stopId, stopType) ?? null;
+        }
+
+        /// <summary>
+        /// Gets all stops
+        /// </summary>
+        /// <param name="stopId"></param>
+        /// <param name="stopType"></param>
+        /// <returns></returns>
+        [HttpGet("all")]
+        public async Task<IEnumerable<GTFSStop>> GetAllStopsAsync()
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var data = await _dataSupplier.GetCachedStopsAsync();
+            _logger.LogInformation("Got data in {time} ms", stopwatch.ElapsedMilliseconds);
+            return data;
         }
 
         /// <summary>

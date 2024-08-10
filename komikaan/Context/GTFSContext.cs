@@ -3,16 +3,11 @@ using Dapper;
 using GTFS.Entities;
 using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
-using komikaan.Data.Models;
-using komikaan.Extensions;
 using komikaan.Handlers;
 using komikaan.Interfaces;
-using komikaan.Models;
-using komikaan.Models.API.NS;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Implementation;
 using Npgsql;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace komikaan.Context
 {
@@ -20,12 +15,13 @@ namespace komikaan.Context
     // Very inefficient and not-prod ready
     // Essentially brute forcing to have fun
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-    public class GTFSContext : IDataSupplierContext
+    public class GTFSContext : IGTFSContext
     {
         private readonly ILogger<GTFSContext> _logger;
 
         private readonly string _connectionString;
         private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
+        private List<GTFSStop> _allStops;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
@@ -39,46 +35,22 @@ namespace komikaan.Context
 
 
             _dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
-            _dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true); 
+            _dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true);
             _dataSourceBuilder.UseGeoJson();
 
 
         }
 
-        public DataSource Supplier { get; } = DataSource.KomIkAan;
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Finished reading GTFS data");
+            _allStops = (await GetAllStopsAsync()).ToList();
             await Task.CompletedTask;
         }
 
-        public Task LoadRelevantDataAsync(CancellationToken cancellationToken)
+        public async Task LoadRelevantDataAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("No data to reload");
-            return Task.CompletedTask;
-        }
-
-        public Task<IEnumerable<SimpleDisruption>> GetDisruptionsAsync(string from, string to, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(Enumerable.Empty<SimpleDisruption>());
-        }
-
-        public Task<IEnumerable<SimpleDisruption>> GetAllDisruptionsAsync(bool active, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(Enumerable.Empty<SimpleDisruption>());
-        }
-
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
-        public async Task<IEnumerable<SimpleTravelAdvice>> GetTravelAdviceAsync(string from, string to, CancellationToken cancellationToken)
-        {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString); // Use the appropriate connection type
-
-            var searchDate = new DateTime(2024, 05, 19);
-
-            _logger.LogInformation("A unrecognized stop was present {fromStop} - {toStop}", from, to);
-            return await Task.FromResult<IEnumerable<SimpleTravelAdvice>>(Enumerable.Empty<SimpleTravelAdvice>());
-
+            _allStops = (await GetAllStopsAsync()).ToList();
         }
 
         public async Task<IEnumerable<GTFSStop>> FindAsync(string text, CancellationToken cancellationToken)
@@ -93,7 +65,7 @@ namespace komikaan.Context
             return foundStops;
         }
 
-        internal async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date)
+        public async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             //TODO: Take in account the relative timezone for us + user
@@ -156,11 +128,11 @@ namespace komikaan.Context
             return null;
         }
 
-        internal async Task<GTFSStopData> GetStopAsync(Guid stopId, StopType stopType)
+        public async Task<GTFSStopData?> GetStopAsync(Guid stopId, StopType stopType)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
 
-            var stop = await dbConnection.QueryFirstAsync<GTFSStopData>(
+            var stop = await dbConnection.QueryFirstOrDefaultAsync<GTFSStopData>(
             @"select * from get_stop_from_id(@stopid, @stop_type) LIMIT 1",
                 new
                 {
@@ -170,50 +142,52 @@ namespace komikaan.Context
                 commandType: CommandType.Text
             );
 
-            //TODO: Take in account used timezone for the user
-            var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
-            @"select * from get_stop_times_from_stop(@stop, @stop_type, @time)",
-                new
-                {
-                    stop = stopId,
-                    stop_type = stopType,
-                    time = DateTimeOffset.UtcNow.AddMinutes(-2)
-                },
-                commandType: CommandType.Text
-            );
-            stop.Departures = foundStops;
-
-            stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
-            @"select * from get_related_stops(@stop, @stop_type)",
-                new
-                {
-                    stop = stopId,
-                    stop_type = stopType
-                },
-                commandType: CommandType.Text
-            );
-
-            var keptStations = new List<GTFSStopData>();
-
-            foreach (var relatedStop in stop.RelatedStops)
+            if (stop != null)
             {
-                if (!keptStations.Exists(relatedUnfiltered => relatedUnfiltered.StopType == relatedStop.StopType))
-                {
-                    keptStations.Add(relatedStop);
-                }
-                else
-                {
-                    if (keptStations.Any(filteredStop => filteredStop.StopType == relatedStop.StopType && (!string.IsNullOrEmpty(relatedStop.ParentStation) && string.IsNullOrEmpty(filteredStop.ParentStation))))
+                //TODO: Take in account used timezone for the user
+                var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
+                @"select * from get_stop_times_from_stop(@stop, @stop_type, @time)",
+                    new
                     {
-                        _logger.LogInformation("Showing a nicer station name from a parent");
-                        keptStations.RemoveAll(filteredStop => filteredStop.StopType == relatedStop.StopType);
+                        stop = stopId,
+                        stop_type = stopType,
+                        time = DateTimeOffset.UtcNow.AddMinutes(-2)
+                    },
+                    commandType: CommandType.Text
+                );
+                stop.Departures = foundStops;
+
+                stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
+                @"select * from get_related_stops(@stop, @stop_type)",
+                    new
+                    {
+                        stop = stopId,
+                        stop_type = stopType
+                    },
+                    commandType: CommandType.Text
+                );
+
+                var keptStations = new List<GTFSStopData>();
+
+                foreach (var relatedStop in stop.RelatedStops)
+                {
+                    if (!keptStations.Exists(relatedUnfiltered => relatedUnfiltered.StopType == relatedStop.StopType))
+                    {
                         keptStations.Add(relatedStop);
                     }
+                    else
+                    {
+                        if (keptStations.Any(filteredStop => filteredStop.StopType == relatedStop.StopType && (!string.IsNullOrEmpty(relatedStop.ParentStation) && string.IsNullOrEmpty(filteredStop.ParentStation))))
+                        {
+                            _logger.LogInformation("Showing a nicer station name from a parent");
+                            keptStations.RemoveAll(filteredStop => filteredStop.StopType == relatedStop.StopType);
+                            keptStations.Add(relatedStop);
+                        }
+                    }
                 }
+
+                stop.RelatedStops = keptStations;
             }
-
-            stop.RelatedStops = keptStations;
-
             return stop;
         }
 
@@ -226,6 +200,21 @@ namespace komikaan.Context
                 commandType: CommandType.Text
             );
             return foundStops;
+        }
+
+        private async Task<IEnumerable<GTFSStop>> GetAllStopsAsync()
+        {
+            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var foundStops = await connection.QueryAsync<GTFSStop>(
+            @"select * from get_all_stops()",
+                commandType: CommandType.Text
+            );
+            return foundStops;
+        }
+
+        public Task<List<GTFSStop>> GetCachedStopsAsync()
+        {
+            return Task.FromResult(_allStops);
         }
     }
 }

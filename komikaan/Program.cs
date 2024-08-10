@@ -5,16 +5,11 @@ using komikaan.Services;
 using Refit;
 using Serilog;
 using System.Reflection;
-using komikaan.Data.Configuration;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Diagnostics.Metrics;
 using System.Diagnostics;
-using GeoAPI;
-using NetTopologySuite.Geometries.Implementation;
-using NetTopologySuite.Geometries;
-using NetTopologySuite;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "I dont like top levels, will receive a reformat ever.")]
 internal class Program
@@ -44,7 +39,6 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.Configure<SupplierConfigurations>(builder.Configuration.GetSection("SupplierMappings"));
 
         CreateObservability(builder, builder.Services, meter);
 
@@ -81,7 +75,6 @@ internal class Program
         refitClientBuilder.Services.AddSingleton<HttpLoggingHandler>();
         AddDataSuppliers(builder);
         builder.Services.AddHostedService<DataService>();
-        builder.Services.AddSingleton<ITravelAdviceHandler, TravelAdviceHandler>();
 
         SetupApplication(builder, corsName);
     }
@@ -132,9 +125,7 @@ internal class Program
     private static void AddDataSuppliers(WebApplicationBuilder builder)
     {
         //builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
-        builder.Services.AddSingleton<IDataSupplierContext, GTFSContext>();
-        //TODO: BAD, ONLY FOR TESTING. CREATES 2 INSTANCES
-        builder.Services.AddSingleton<GTFSContext>();
+        builder.Services.AddSingleton<IGTFSContext, GTFSContext>();
     }
 
     private static void SetupApplication(WebApplicationBuilder builder, string corsName)
