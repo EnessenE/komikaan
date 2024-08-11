@@ -1,5 +1,6 @@
 ﻿using komikaan.Context;
 using komikaan.Data.GTFS;
+using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace komikaan.Controllers
@@ -9,9 +10,9 @@ namespace komikaan.Controllers
     public class TripsController : ControllerBase
     {
         private readonly ILogger<TripsController> _logger;
-        private readonly GTFSContext _gtfs;
+        private readonly IGTFSContext _gtfs;
 
-        public TripsController(ILogger<TripsController> logger, GTFSContext gtfs)
+        public TripsController(ILogger<TripsController> logger, IGTFSContext gtfs)
         {
             _logger = logger;
             _gtfs = gtfs;
