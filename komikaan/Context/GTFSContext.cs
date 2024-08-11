@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Dapper;
 using GTFS.Entities;
+using komikaan.Controllers;
 using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
 using komikaan.Handlers;
@@ -28,6 +29,8 @@ namespace komikaan.Context
         {
             SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
             SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler());
+            SqlMapper.AddTypeHandler(new DoubleArrayHandler());
+
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
             _logger = logger;
@@ -53,16 +56,31 @@ namespace komikaan.Context
             _allStops = (await GetAllStopsAsync()).ToList();
         }
 
-        public async Task<IEnumerable<GTFSStop>> FindAsync(string text, CancellationToken cancellationToken)
+        public async Task<IEnumerable<GTFSSearchStop>> FindAsync(string text, CancellationToken cancellationToken)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
 
-            var foundStops = await dbConnection.QueryAsync<GTFSStop>(
+            var foundStops = await dbConnection.QueryAsync<GTFSSearchStop>(
                 @"select * from search_stop(@search)",
                 new { search = text.ToLowerInvariant() },
                 commandType: CommandType.Text
             );
+
+            foreach ( var stop in foundStops )
+            {
+                FixCoordinates(stop);
+            }
             return foundStops;
+        }
+
+        private static void FixCoordinates(GTFSSearchStop stop)
+        {
+            foreach 
+                (var item in stop.Coordinates)
+            {
+                stop.AdjustedCoordinates.Add(new SimpleCoordinate() { Longitude = item[0], Latitude = item[1] });
+
+            }
         }
 
         public async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date)
@@ -191,14 +209,19 @@ namespace komikaan.Context
             return stop;
         }
 
-        public async Task<IEnumerable<GTFSStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
+        public async Task<IEnumerable<GTFSSearchStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
             await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
-            var foundStops = await connection.QueryAsync<GTFSStop>(
+            var foundStops = await connection.QueryAsync<GTFSSearchStop>(
             @"select * from nearby_stops(@latitude, @longitude)",
                 new { longitude = longitude, latitude = latitude },
                 commandType: CommandType.Text
             );
+
+            foreach (var stop in foundStops)
+            {
+                FixCoordinates(stop);
+            }
             return foundStops;
         }
 

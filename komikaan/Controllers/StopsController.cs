@@ -24,7 +24,7 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<GTFSStop>> SearchStopsAsync(string filter)
+        public async Task<IEnumerable<GTFSSearchStop>> SearchStopsAsync(string filter)
         {
             _logger.LogInformation("Searching for {name}", filter);
             var stops = await _dataSupplier.FindAsync(filter, CancellationToken.None);
