@@ -51,7 +51,7 @@ namespace komikaan.Controllers
         /// <param name="stopType"></param>
         /// <returns></returns>
         [HttpGet("all")]
-        public async Task<IEnumerable<GTFSStop>> GetAllStopsAsync()
+        public async Task<IEnumerable<GTFSSearchStop>> GetAllStopsAsync()
         {
             var stopwatch = Stopwatch.StartNew();
             var data = await _dataSupplier.GetCachedStopsAsync();
@@ -66,7 +66,7 @@ namespace komikaan.Controllers
         /// <param name="latitude">Latitude coordinate</param>
         /// <returns></returns>
         [HttpGet("nearby")]
-        public async Task<IEnumerable<GTFSStop>> NearbyStopsAsync(double longitude, double latitude)
+        public async Task<IEnumerable<GTFSSearchStop>> NearbyStopsAsync(double longitude, double latitude)
         {
             return await _dataSupplier.GetNearbyStopsAsync(longitude, latitude, CancellationToken.None);
         }

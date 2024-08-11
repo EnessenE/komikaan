@@ -22,7 +22,7 @@ namespace komikaan.Context
 
         private readonly string _connectionString;
         private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
-        private List<GTFSStop> _allStops;
+        private List<GTFSSearchStop> _allStops;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
@@ -75,11 +75,12 @@ namespace komikaan.Context
 
         private static void FixCoordinates(GTFSSearchStop stop)
         {
-            foreach 
-                (var item in stop.Coordinates)
+            if (stop.Coordinates != null)
             {
-                stop.AdjustedCoordinates.Add(new SimpleCoordinate() { Longitude = item[0], Latitude = item[1] });
-
+                foreach (var item in stop.Coordinates)
+                {
+                    stop.AdjustedCoordinates.Add(new SimpleCoordinate() { Longitude = item[0], Latitude = item[1] });
+                }
             }
         }
 
@@ -225,17 +226,21 @@ namespace komikaan.Context
             return foundStops;
         }
 
-        private async Task<IEnumerable<GTFSStop>> GetAllStopsAsync()
+        private async Task<IEnumerable<GTFSSearchStop>> GetAllStopsAsync()
         {
             await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
-            var foundStops = await connection.QueryAsync<GTFSStop>(
+            var foundStops = await connection.QueryAsync<GTFSSearchStop>(
             @"select * from get_all_stops()",
                 commandType: CommandType.Text
             );
+            foreach (var stop in foundStops)
+            {
+                FixCoordinates(stop);
+            }
             return foundStops;
         }
 
-        public Task<List<GTFSStop>> GetCachedStopsAsync()
+        public Task<List<GTFSSearchStop>> GetCachedStopsAsync()
         {
             return Task.FromResult(_allStops);
         }
