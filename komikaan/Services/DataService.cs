@@ -5,11 +5,11 @@ namespace komikaan.Services
 {
     public class DataService : BackgroundService
     {
-        private readonly IEnumerable<IDataSupplierContext> _dataSuppliers;
+        private readonly IEnumerable<IGTFSContext> _dataSuppliers;
         private readonly ILogger<DataService> _logger;
         private readonly PeriodicTimer _periodicTimer;
 
-        public DataService(IEnumerable<IDataSupplierContext> dataSuppliers, ILogger<DataService> logger)
+        public DataService(IEnumerable<IGTFSContext> dataSuppliers, ILogger<DataService> logger)
         {
             _dataSuppliers = dataSuppliers;
             _logger = logger;
@@ -53,7 +53,7 @@ namespace komikaan.Services
 
             _logger.LogInformation("Finished starting data suppliers");
         }
-        private async Task StartDataSupplierAsync(CancellationToken stoppingToken, IDataSupplierContext dataSupplier)
+        private async Task StartDataSupplierAsync(CancellationToken stoppingToken, IGTFSContext dataSupplier)
         {
             _logger.LogInformation("Starting Datasupplier {name}", dataSupplier.GetType().FullName);
             var stopwatch = Stopwatch.StartNew();
@@ -63,7 +63,7 @@ namespace komikaan.Services
         }
 
 
-        private async Task LoadDataSupplierAsync(CancellationToken cancellationToken, IDataSupplierContext dataSupplier)
+        private async Task LoadDataSupplierAsync(CancellationToken cancellationToken, IGTFSContext dataSupplier)
         {
             _logger.LogInformation("Reloading Datasupplier {name}", dataSupplier.GetType().FullName);
             var stopwatch = Stopwatch.StartNew();

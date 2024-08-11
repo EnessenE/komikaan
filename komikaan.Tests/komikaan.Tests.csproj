@@ -24,4 +24,9 @@
     <ProjectReference Include="..\komikaan\komikaan.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Stubs\" />
+    <Folder Include="Tests\" />
+  </ItemGroup>
+
 </Project>
