@@ -184,6 +184,16 @@ namespace komikaan.Context
                     commandType: CommandType.Text
                 );
 
+                stop.Routes = await dbConnection.QueryAsync<GTFSRoute>(
+                @"select * from get_routes_from_stop(@stop, @stop_type)",
+                    new
+                    {
+                        stop = stopId,
+                        stop_type = stopType
+                    },
+                    commandType: CommandType.Text
+                );
+
                 var keptStations = new List<GTFSStopData>();
 
                 foreach (var relatedStop in stop.RelatedStops)
