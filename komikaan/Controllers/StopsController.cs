@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using GTFS.Entities.Enumerations;
 using komikaan.Context;
 using komikaan.Data.GTFS;
 using komikaan.Interfaces;

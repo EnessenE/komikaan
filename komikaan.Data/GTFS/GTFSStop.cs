@@ -1,4 +1,6 @@
-﻿namespace komikaan.Data.GTFS
+﻿using GTFS.Entities.Enumerations;
+
+namespace komikaan.Data.GTFS
 {
     public class GTFSStop
     {

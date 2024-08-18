@@ -1,7 +1,6 @@
-﻿using komikaan.Controllers;
-using komikaan.Data.Enums;
+﻿using GTFS.Entities.Enumerations;
+using komikaan.Controllers;
 using komikaan.Data.GTFS;
-using komikaan.Models;
 
 namespace komikaan.Interfaces;
 

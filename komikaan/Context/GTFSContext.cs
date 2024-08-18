@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Dapper;
 using GTFS.Entities;
+using GTFS.Entities.Enumerations;
 using komikaan.Controllers;
 using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
@@ -36,12 +37,9 @@ namespace komikaan.Context
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
 
-
             _dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
             _dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true);
             _dataSourceBuilder.UseGeoJson();
-
-
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
