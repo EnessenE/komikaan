@@ -8,7 +8,7 @@
     <UserSecretsId>e4e92886-a5e4-4798-967e-714b8d37eec3</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <Version>2.5.0</Version>
+    <Version>2.5.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -25,8 +25,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="komikaan.Common" Version="1.1.6" />
-    <PackageReference Include="komikaan.GTFS" Version="3.1.5-enes" />
+    <PackageReference Include="komikaan.Common" Version="1.1.8" />
+    <PackageReference Include="komikaan.GTFS" Version="3.2.2-enes" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="Npgsql.GeoJSON" Version="8.0.3" />
@@ -36,7 +36,7 @@
     <PackageReference Include="Refit.HttpClientFactory" Version="7.1.2" />
     <PackageReference Include="Refit.Newtonsoft.Json" Version="7.1.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.1" />
 
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
