@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.7.1] - 25-08-2024
+### Added
+- Feeds controller
+- Cached feeds
+### Removed
+- Cached all stops
+
 [2.6.0] - 04-08-2024
 ### Added
 -- When collecting stops, also collect routes
