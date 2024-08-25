@@ -11,7 +11,7 @@ Because of the need to deduplicate and merge data, we can't handle it manuallyâ€
 The following is a really simplistic overview of the current structure of the project:
 - API (this project)
     - For connecting to the PostgresQL database
-- FileDetector*
+- [FileDetector](https://github.com/EnessenE/komikaan-file-detector)
     - Responsible for querying external data suppliers and checking if a new GTFS file has been published
 - Harvester*
     - Responsible for importing GTFS datasets
@@ -19,7 +19,7 @@ The following is a really simplistic overview of the current structure of the pr
 - Gardener*
     - Responsible processing each stop to attempt a merge with other relevant stops
     - Responsible for publishing deduplicated stop into the database
-- Irrigator*
+- [Irrigator](https://github.com/EnessenE/komikaan-irrigator)
     - Responsible for retrieving and processing GTFS realtime data
     - Responsible for writing the realtime data to the database 
 - GTFS-PSQL-Multisourced*
