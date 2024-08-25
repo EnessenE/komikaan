@@ -15,7 +15,7 @@ namespace komikaan.Context
     //Random code to mess around with GTFS data
     // Very inefficient and not-prod ready
     // Essentially brute forcing to have fun
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "This entire class needs a refactor")]
     public class GTFSContext : IGTFSContext
     {
         private readonly ILogger<GTFSContext> _logger;
@@ -24,7 +24,7 @@ namespace komikaan.Context
         private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
         private List<GTFSSearchStop> _allStops;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "This entire class needs a refactor")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
         {
             SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
