@@ -46,21 +46,6 @@ namespace komikaan.Controllers
         }
 
         /// <summary>
-        /// Gets all stops
-        /// </summary>
-        /// <param name="stopId"></param>
-        /// <param name="stopType"></param>
-        /// <returns></returns>
-        [HttpGet("all")]
-        public async Task<IEnumerable<GTFSSearchStop>> GetAllStopsAsync()
-        {
-            var stopwatch = Stopwatch.StartNew();
-            var data = await _dataSupplier.GetCachedStopsAsync();
-            _logger.LogInformation("Got data in {time} ms", stopwatch.ElapsedMilliseconds);
-            return data;
-        }
-
-        /// <summary>
         /// Based on coordinates, get all nearby stops 
         /// </summary>
         /// <param name="longitude">Longitude coordinate</param>

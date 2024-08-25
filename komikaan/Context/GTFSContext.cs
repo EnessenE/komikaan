@@ -3,7 +3,6 @@ using Dapper;
 using GTFS.Entities;
 using GTFS.Entities.Enumerations;
 using komikaan.Controllers;
-using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
 using komikaan.Handlers;
 using komikaan.Interfaces;
@@ -16,16 +15,16 @@ namespace komikaan.Context
     //Random code to mess around with GTFS data
     // Very inefficient and not-prod ready
     // Essentially brute forcing to have fun
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "TODO")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "This entire class needs a refactor")]
     public class GTFSContext : IGTFSContext
     {
         private readonly ILogger<GTFSContext> _logger;
 
         private readonly string _connectionString;
         private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
-        private List<GTFSSearchStop> _allStops;
+        private List<Feed> _allFeeds;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "This entire class needs a refactor")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
         {
             SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
@@ -45,13 +44,13 @@ namespace komikaan.Context
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Finished reading GTFS data");
-            _allStops = (await GetAllStopsAsync()).ToList();
+            _allFeeds = (await CacheFeedsAsync()).ToList();
             await Task.CompletedTask;
         }
 
         public async Task LoadRelevantDataAsync(CancellationToken cancellationToken)
         {
-            _allStops = (await GetAllStopsAsync()).ToList();
+            _allFeeds = (await CacheFeedsAsync()).ToList();
         }
 
         public async Task<IEnumerable<GTFSSearchStop>> FindAsync(string text, CancellationToken cancellationToken)
@@ -248,9 +247,19 @@ namespace komikaan.Context
             return foundStops;
         }
 
-        public Task<List<GTFSSearchStop>> GetCachedStopsAsync()
+        private async Task<IEnumerable<Feed>> CacheFeedsAsync()
         {
-            return Task.FromResult(_allStops);
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<Feed>(
+            @"select * from get_all_feeds()",
+                commandType: CommandType.Text
+            );
+            return data;
+        }
+
+        public Task<IEnumerable<Feed>> GetFeedsAsync()
+        {
+            return Task.FromResult(_allFeeds.AsEnumerable());
         }
     }
 }
