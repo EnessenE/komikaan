@@ -22,7 +22,7 @@ namespace komikaan.Context
 
         private readonly string _connectionString;
         private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
-        private List<GTFSSearchStop> _allStops;
+        private List<Feed> _allFeeds;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "This entire class needs a refactor")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
@@ -44,13 +44,13 @@ namespace komikaan.Context
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Finished reading GTFS data");
-            _allStops = (await GetAllStopsAsync()).ToList();
+            _allFeeds = (await CacheFeedsAsync()).ToList();
             await Task.CompletedTask;
         }
 
         public async Task LoadRelevantDataAsync(CancellationToken cancellationToken)
         {
-            _allStops = (await GetAllStopsAsync()).ToList();
+            _allFeeds = (await CacheFeedsAsync()).ToList();
         }
 
         public async Task<IEnumerable<GTFSSearchStop>> FindAsync(string text, CancellationToken cancellationToken)
@@ -247,7 +247,7 @@ namespace komikaan.Context
             return foundStops;
         }
 
-        public async Task<IEnumerable<Feed>?> GetFeedsAsync()
+        private async Task<IEnumerable<Feed>> CacheFeedsAsync()
         {
             await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
             var data = await connection.QueryAsync<Feed>(
@@ -257,9 +257,9 @@ namespace komikaan.Context
             return data;
         }
 
-        public Task<List<GTFSSearchStop>> GetCachedStopsAsync()
+        public Task<IEnumerable<Feed>> GetFeedsAsync()
         {
-            return Task.FromResult(_allStops);
+            return Task.FromResult(_allFeeds.AsEnumerable());
         }
     }
 }
