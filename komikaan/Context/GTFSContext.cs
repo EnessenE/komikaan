@@ -3,7 +3,6 @@ using Dapper;
 using GTFS.Entities;
 using GTFS.Entities.Enumerations;
 using komikaan.Controllers;
-using komikaan.Data.Enums;
 using komikaan.Data.GTFS;
 using komikaan.Handlers;
 using komikaan.Interfaces;
@@ -246,6 +245,16 @@ namespace komikaan.Context
                 FixCoordinates(stop);
             }
             return foundStops;
+        }
+
+        public async Task<IEnumerable<Feed>?> GetFeedsAsync()
+        {
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<Feed>(
+            @"select * from get_all_feeds()",
+                commandType: CommandType.Text
+            );
+            return data;
         }
 
         public Task<List<GTFSSearchStop>> GetCachedStopsAsync()
