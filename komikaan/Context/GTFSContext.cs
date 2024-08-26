@@ -261,5 +261,46 @@ namespace komikaan.Context
         {
             return Task.FromResult(_allFeeds.AsEnumerable());
         }
+
+        public async Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin)
+        {
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<GTFSRoute>(
+            @"select * from get_routes_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+
+            return data;
+        }
+
+        public async Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin)
+        {
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<Shape>(
+            @"select * from get_shapes_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+
+            return data;
+        }
+
+        public async Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin)
+        {
+            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<GTFSSearchStop>(
+            @"select * from get_stops_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+
+            foreach (var stop in data)
+            {
+                FixCoordinates(stop);
+            }
+
+            return data;
+        }
     }
 }
