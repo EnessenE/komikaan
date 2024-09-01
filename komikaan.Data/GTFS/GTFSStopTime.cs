@@ -25,5 +25,6 @@
         public string RouteDesc { get; set; }
         public string RouteColor { get; set; }
         public string RouteTextColor { get; set; }
+        public bool RealTime { get; set; }
     }
 }
