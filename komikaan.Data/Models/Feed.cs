@@ -1,4 +1,4 @@
-﻿namespace komikaan.Controllers
+﻿namespace komikaan.Data.Models
 {
     public class Feed
     {
@@ -12,5 +12,8 @@
         public int Routes { get; set; }
         public int Stops { get; set; }
         public int Trips { get; set; }
+
+        public List<VehiclePosition> Positions { get; set; }
     }
+
 }

@@ -16,10 +16,11 @@ namespace komikaan.Data.GTFS
         public StopType StopType { get; set; }
         public int PickupType { get; set; }
         public int DropOffType { get; set; }
-        public DateTimeOffset? ActualArrivalTime { get => Arrival; }
-        public DateTimeOffset? ActualDepartureTime { get => Departure; }
-        public DateTimeOffset? PlannedArrivalTime { get => Arrival; }
-        public DateTimeOffset? PlannedDepartureTime { get => Departure; }
+        public string? ScheduleRelationship { get; set; }
+        public DateTimeOffset? ActualArrivalTime { get; set; }
+        public DateTimeOffset? ActualDepartureTime { get; set; }
+        public DateTimeOffset? PlannedArrivalTime { get; set; }
+        public DateTimeOffset? PlannedDepartureTime { get; set; }
         public string PlannedPlatform { get => PlatformCode; }
         public string ActualPlatform { get => PlatformCode; }
     }

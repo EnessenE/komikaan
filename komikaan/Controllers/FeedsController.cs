@@ -1,5 +1,6 @@
 ﻿using GTFS.Entities;
 using komikaan.Data.GTFS;
+using komikaan.Data.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,5 +40,14 @@ namespace komikaan.Controllers
             var feeds = await _gtfs.GetStopsAsync(dataOrigin);
             return feeds?.ToList();
         }
+
+        [HttpGet("{dataOrigin}/positions")]
+        public async Task<List<VehiclePosition>?> GetPositionsAsync(string dataOrigin)
+        {
+            var feeds = await _gtfs.GetPositionsAsync(dataOrigin);
+            return feeds?.ToList();
+        }
+
+
     }
 }

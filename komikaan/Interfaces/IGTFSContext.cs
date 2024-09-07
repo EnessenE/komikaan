@@ -2,6 +2,7 @@
 using GTFS.Entities.Enumerations;
 using komikaan.Controllers;
 using komikaan.Data.GTFS;
+using komikaan.Data.Models;
 
 namespace komikaan.Interfaces;
 
@@ -17,4 +18,5 @@ public interface IGTFSContext
     Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin);
     Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin);
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
+    Task<IEnumerable<VehiclePosition>?> GetPositionsAsync(string dataOrigin);
 }
