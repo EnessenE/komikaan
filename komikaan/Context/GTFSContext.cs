@@ -4,6 +4,8 @@ using GTFS.Entities;
 using GTFS.Entities.Enumerations;
 using komikaan.Controllers;
 using komikaan.Data.GTFS;
+using komikaan.Data.Models;
+using komikaan.Extensions;
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using NetTopologySuite.Geometries;
@@ -260,6 +262,66 @@ namespace komikaan.Context
         public Task<IEnumerable<Feed>> GetFeedsAsync()
         {
             return Task.FromResult(_allFeeds.AsEnumerable());
+        }
+
+        public async Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin)
+        {
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<GTFSDatabaseRoute>(
+            @"select * from get_routes_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+            var items = new List<GTFSRoute>();
+            foreach (var item in data)
+            {
+                var route = (GTFSRoute)item;
+                route.Type = item.Type.ConvertStopType();
+                items.Add(route);
+            }
+
+            return items;
+        }
+
+        public async Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin)
+        {
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<Shape>(
+            @"select * from get_shapes_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+
+            return data;
+        }
+
+        public async Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin)
+        {
+            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<GTFSSearchStop>(
+            @"select * from get_stops_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+
+            foreach (var stop in data)
+            {
+                FixCoordinates(stop);
+            }
+
+            return data;
+        }
+
+        public async Task<IEnumerable<VehiclePosition>?> GetPositionsAsync(string dataOrigin)
+        {
+            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            var data = await connection.QueryAsync<VehiclePosition>(
+            @"select * from get_positions_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+
+            return data;
         }
     }
 }
