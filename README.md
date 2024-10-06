@@ -18,7 +18,7 @@ The following is a really simplistic overview of the current structure of the pr
     - Publishes imported stops to an RabbitMQ queue
 - Gardener*
     - Responsible processing each stop to attempt a merge with other relevant stops
-    - Responsible for publishing deduplicated stop into the database
+    - Responsible for publishing deduplicated stops into the database
 - [Irrigator](https://github.com/EnessenE/komikaan-irrigator)
     - Responsible for retrieving and processing GTFS realtime data
     - Responsible for writing the realtime data to the database 
