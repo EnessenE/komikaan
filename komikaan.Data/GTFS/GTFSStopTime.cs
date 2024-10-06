@@ -18,9 +18,8 @@
         public string RouteLongName { get; set; }
         public string DataOrigin { get; set; }
         public string Operator { get; set; }
-        public string PlannedPlatform { get => Platform; }
-        public string ActualPlatform { get=> Platform; }
-        public string Platform { get; set; }
+        public string PlannedPlatform { get; set; }
+        public string ActualPlatform { get; set; }
         public string RouteUrl { get; set; }
         public string RouteType { get; set; }
         public string RouteDesc { get; set; }
