@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics;
 using Dapper;
 using GTFS.Entities;
 using GTFS.Entities.Enumerations;
@@ -149,7 +150,7 @@ namespace komikaan.Context
         public async Task<GTFSStopData?> GetStopAsync(Guid stopId, StopType stopType)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
-
+            var stopwatch = Stopwatch.StartNew();
             var stop = await dbConnection.QueryFirstOrDefaultAsync<GTFSStopData>(
             @"select * from get_stop_from_id(@stopid, @stop_type) LIMIT 1",
                 new
@@ -159,6 +160,7 @@ namespace komikaan.Context
                 },
                 commandType: CommandType.Text
             );
+            _logger.LogInformation("Retrieved basic stop {time}", stopwatch.Elapsed);
 
             if (stop != null)
             {
@@ -174,6 +176,7 @@ namespace komikaan.Context
                     commandType: CommandType.Text
                 );
                 stop.Departures = foundStops;
+                _logger.LogInformation("Retrieved departures {time}", stopwatch.Elapsed);
 
                 stop.RelatedStops = await dbConnection.QueryAsync<GTFSStopData>(
                 @"select * from get_related_stops(@stop, @stop_type)",
@@ -184,6 +187,7 @@ namespace komikaan.Context
                     },
                     commandType: CommandType.Text
                 );
+                _logger.LogInformation("Retrieved related stops {time}", stopwatch.Elapsed);
 
                 stop.Routes = await dbConnection.QueryAsync<GTFSRoute>(
                 @"select * from get_routes_from_stop(@stop, @stop_type)",
@@ -194,6 +198,8 @@ namespace komikaan.Context
                     },
                     commandType: CommandType.Text
                 );
+
+                _logger.LogInformation("Retrieved routes {time}", stopwatch.Elapsed);
 
                 var keptStations = new List<GTFSStopData>();
 
@@ -214,6 +220,7 @@ namespace komikaan.Context
                     }
                 }
 
+                _logger.LogInformation("Fixed stops {time}", stopwatch.Elapsed);
                 stop.RelatedStops = keptStations;
             }
             return stop;
