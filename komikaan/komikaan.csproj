@@ -8,7 +8,7 @@
     <UserSecretsId>e4e92886-a5e4-4798-967e-714b8d37eec3</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <Version>2.8.1</Version>
+    <Version>2.8.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
