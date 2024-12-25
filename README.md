@@ -22,7 +22,7 @@ The following is a really simplistic overview of the current structure of the pr
 - [Irrigator](https://github.com/EnessenE/komikaan-irrigator)
     - Responsible for retrieving and processing GTFS realtime data
     - Responsible for writing the realtime data to the database 
-- GTFS-PSQL-Multisourced*
+- [GTFS-PSQL-Multisourced](https://github.com/EnessenE/gtfs-psql-multisourced)
     - Working name for the database where the GTFS ends up in
 
 (*) Projects that are not opensource <b>yet</b>
