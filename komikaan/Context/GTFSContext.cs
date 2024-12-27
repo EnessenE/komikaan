@@ -24,7 +24,7 @@ namespace komikaan.Context
         private readonly ILogger<GTFSContext> _logger;
 
         private readonly string _connectionString;
-        private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
+        private readonly NpgsqlDataSource _dataSource;
         private List<Feed> _allFeeds;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "This entire class needs a refactor")]
@@ -39,9 +39,10 @@ namespace komikaan.Context
             _logger = logger;
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
 
-            _dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
-            _dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true);
-            _dataSourceBuilder.UseGeoJson();
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
+            dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true);
+            dataSourceBuilder.UseGeoJson();
+            _dataSource = dataSourceBuilder.Build();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -228,7 +229,7 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<GTFSSearchStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
-            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var foundStops = await connection.QueryAsync<GTFSSearchStop>(
             @"select * from nearby_stops(@latitude, @longitude)",
                 new { longitude = longitude, latitude = latitude },
@@ -244,7 +245,7 @@ namespace komikaan.Context
 
         private async Task<IEnumerable<GTFSSearchStop>> GetAllStopsAsync()
         {
-            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var foundStops = await connection.QueryAsync<GTFSSearchStop>(
             @"select * from get_all_stops()",
                 commandType: CommandType.Text
@@ -258,7 +259,7 @@ namespace komikaan.Context
 
         private async Task<IEnumerable<Feed>> CacheFeedsAsync()
         {
-            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var data = await connection.QueryAsync<Feed>(
             @"select * from get_all_feeds()",
                 commandType: CommandType.Text
@@ -273,7 +274,7 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin)
         {
-            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var data = await connection.QueryAsync<GTFSDatabaseRoute>(
             @"select * from get_routes_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
@@ -292,7 +293,7 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin)
         {
-            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var data = await connection.QueryAsync<Shape>(
             @"select * from get_shapes_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
@@ -304,7 +305,7 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin)
         {
-            await using var connection = await (_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var data = await connection.QueryAsync<GTFSSearchStop>(
             @"select * from get_stops_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
@@ -321,7 +322,7 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<VehiclePosition>?> GetPositionsAsync(string dataOrigin)
         {
-            await using var connection = await(_dataSourceBuilder.Build()).OpenConnectionAsync();
+            await using var connection = await _dataSource.OpenConnectionAsync();
             var data = await connection.QueryAsync<VehiclePosition>(
             @"select * from get_positions_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
