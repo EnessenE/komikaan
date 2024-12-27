@@ -2,7 +2,6 @@
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Services;
-using Refit;
 using Serilog;
 using System.Reflection;
 using OpenTelemetry.Metrics;
@@ -62,23 +61,6 @@ internal class Program
                 });
         });
 
-        var refitSettings = new RefitSettings()
-        {
-            ContentSerializer = new NewtonsoftJsonContentSerializer()
-        };
-
-        IHttpClientBuilder refitClientBuilder = builder.Services.AddRefitClient<INSApi>(refitSettings)
-            .ConfigureHttpClient(httpClient =>
-            {
-                httpClient.BaseAddress = new Uri(builder.Configuration.GetValue<string>("NS_Api_Url")!);
-                httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", builder.Configuration.GetValue<string>("ns_api_key"));
-                // Will throw `TaskCanceledException` if the request goes longer than 3 seconds.
-                httpClient.Timeout = TimeSpan.FromSeconds(30);
-            });
-        // Adding our new handler here
-        refitClientBuilder.AddHttpMessageHandler(serviceProvider
-            => new HttpLoggingHandler(serviceProvider.GetRequiredService<ILogger<HttpLoggingHandler>>()));
-        refitClientBuilder.Services.AddSingleton<HttpLoggingHandler>();
         AddDataSuppliers(builder);
         builder.Services.AddHostedService<DataService>();
 
@@ -130,7 +112,6 @@ internal class Program
 
     private static void AddDataSuppliers(WebApplicationBuilder builder)
     {
-        //builder.Services.AddSingleton<IDataSupplierContext, NSContext>();
         builder.Services.AddSingleton<IGTFSContext, GTFSContext>();
     }
 
