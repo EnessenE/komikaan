@@ -3,6 +3,11 @@ using System.Data;
 
 namespace komikaan.Handlers;
 
+/// <summary>
+/// Dapper extension of the double[] type some of our functions return
+/// </summary>
+/// I personally find it bad practice to return arrays like this
+/// But honestly I can justify so it so meh
 public class DoubleArrayHandler : SqlMapper.TypeHandler<double[][]>
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "AV1706:Identifier contains an abbreviation or is too short", Justification = "TODO")]
