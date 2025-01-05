@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [2.8.5] - 05-01-2024
 ### Added
 - Realtime bool to Feed object
+- StopTimes int to Feed object
 
 [2.8.4] - 27-12-2024
 ### Added

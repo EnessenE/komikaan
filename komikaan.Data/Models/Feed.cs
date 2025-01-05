@@ -11,6 +11,7 @@
         public int Agencies { get; set; }
         public int Routes { get; set; }
         public int Stops { get; set; }
+        public int StopTimes { get; set; }
         public int Trips { get; set; }
         public bool RealTime { get; set; }
 
