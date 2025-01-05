@@ -12,6 +12,7 @@
         public int Routes { get; set; }
         public int Stops { get; set; }
         public int Trips { get; set; }
+        public bool RealTime { get; set; }
 
         public List<VehiclePosition> Positions { get; set; }
     }
