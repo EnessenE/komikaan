@@ -15,9 +15,11 @@ using Npgsql;
 
 namespace komikaan.Context
 {
-    //Random code to mess around with GTFS data
+    // Random code to mess around with GTFS data
     // Very inefficient and not-prod ready
     // Essentially brute forcing to have fun
+    // Also dont write this stuff at 23:00 while drunk
+    // I am not even joking
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements", Justification = "This entire class needs a refactor")]
     public class GTFSContext : IGTFSContext
     {

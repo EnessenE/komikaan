@@ -47,7 +47,5 @@ namespace komikaan.Controllers
             var feeds = await _gtfs.GetPositionsAsync(dataOrigin);
             return feeds?.ToList();
         }
-
-
     }
 }

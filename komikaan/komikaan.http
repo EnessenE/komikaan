@@ -1,6 +1,0 @@
-@komikthuis_HostAddress = http://localhost:5151
-
-GET {{komikthuis_HostAddress}}/
-Accept: application/json
-
-###
