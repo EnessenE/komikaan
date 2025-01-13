@@ -233,7 +233,7 @@ namespace komikaan.Context
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
             var foundStops = await connection.QueryAsync<GTFSSearchStop>(
-            @"select * from nearby_stops(@latitude, @longitude)",
+            @"select * from nearby_stops(@longitude, @latitude)",
                 new { longitude = longitude, latitude = latitude },
                 commandType: CommandType.Text
             );
