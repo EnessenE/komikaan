@@ -16,7 +16,6 @@ namespace komikaan.Data.GTFS
         public string PlatformCode { get; set; }
         public string DataOrigin { get; set; }
         public DateTime LastUpdated { get; set; }
-        public int MergedStops { get; set; }
         public string? ScheduleRelationship { get; set; }
         public IEnumerable<GTFSRoute>? Routes { get; set; }
 
@@ -24,5 +23,6 @@ namespace komikaan.Data.GTFS
         public StopType StopType { get; set; }
         public IEnumerable<GTFSStopTime>? Departures { get; set; }
         public IEnumerable<GTFSStopData>? RelatedStops { get; set; }
+        public IEnumerable<GTFSStopData>? MergedStops { get; set; }
     }
 }

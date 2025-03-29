@@ -42,8 +42,6 @@ namespace komikaan.Context
             _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
-            dataSourceBuilder.UseNetTopologySuite(new DotSpatialAffineCoordinateSequenceFactory(Ordinates.XYM), geographyAsDefault: true);
-            dataSourceBuilder.UseGeoJson();
             _dataSource = dataSourceBuilder.Build();
         }
 
@@ -69,7 +67,7 @@ namespace komikaan.Context
                 commandType: CommandType.Text
             );
 
-            foreach ( var stop in foundStops )
+            foreach (var stop in foundStops)
             {
                 FixCoordinates(stop);
             }
@@ -167,6 +165,19 @@ namespace komikaan.Context
 
             if (stop != null)
             {
+                var mergedStops = await dbConnection.QueryAsync<GTFSStopData>(
+                @"select * from get_stoplocations_from_id(@stopid, @stop_type)",
+                    new
+                    {
+                        stopid = stopId,
+                        stop_type = stopType
+                    },
+                    commandType: CommandType.Text
+                );
+                stop.MergedStops = mergedStops;
+                _logger.LogInformation("Retrieved mergedStops stop {time}", stopwatch.Elapsed);
+
+
                 //TODO: Take in account used timezone for the user
                 var foundStops = await dbConnection.QueryAsync<GTFSStopTime>(
                 @"select * from get_stop_times_from_stop(@stop, @stop_type, @time)",
