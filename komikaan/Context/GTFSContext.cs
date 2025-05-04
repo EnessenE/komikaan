@@ -3,7 +3,6 @@ using System.Diagnostics;
 using Dapper;
 using GTFS.Entities;
 using GTFS.Entities.Enumerations;
-using komikaan.Controllers;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.Extensions;
@@ -343,6 +342,18 @@ namespace komikaan.Context
             );
 
             return data;
+        }
+
+        async Task<IEnumerable<VehiclePosition>> IGTFSContext.GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var vehicles = await connection.QueryAsync<VehiclePosition>(
+            @"select * from nearby_vehicles(@longitude, @latitude)",
+                new { longitude = longitude, latitude = latitude },
+                commandType: CommandType.Text
+            );
+
+            return vehicles;
         }
     }
 }
