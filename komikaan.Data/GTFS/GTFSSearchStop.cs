@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-using komikaan.Data.GTFS;
 
-namespace komikaan.Controllers
+namespace komikaan.Data.GTFS
 {
     public class GTFSSearchStop : GTFSStop
     {

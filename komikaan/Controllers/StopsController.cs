@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using GTFS.Entities.Enumerations;
 using komikaan.Context;
+using komikaan.Data.API;
 using komikaan.Data.GTFS;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -52,9 +53,12 @@ namespace komikaan.Controllers
         /// <param name="latitude">Latitude coordinate</param>
         /// <returns></returns>
         [HttpGet("nearby")]
-        public async Task<IEnumerable<GTFSSearchStop>> NearbyStopsAsync(double longitude, double latitude)
+        public async Task<NearbyUserData> NearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
-            return await _dataSupplier.GetNearbyStopsAsync(longitude, latitude, CancellationToken.None);
+            var data = new NearbyUserData();
+            data.Stops = await _dataSupplier.GetNearbyStopsAsync(longitude, latitude, cancellationToken);
+            data.Vehicles = await _dataSupplier.GetNearbyVehiclesAsync(longitude, latitude, cancellationToken);
+            return data;
         }
     }
 }

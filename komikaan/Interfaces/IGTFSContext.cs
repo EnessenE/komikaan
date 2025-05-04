@@ -1,6 +1,5 @@
 ﻿using GTFS.Entities;
 using GTFS.Entities.Enumerations;
-using komikaan.Controllers;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 
@@ -12,6 +11,7 @@ public interface IGTFSContext
     Task LoadRelevantDataAsync(CancellationToken cancellationToken);
     Task<IEnumerable<GTFSSearchStop>> FindAsync(string text, CancellationToken cancellationToken);
     Task<IEnumerable<GTFSSearchStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken);
+    Task<IEnumerable<VehiclePosition>> GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken);
     Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date);
     Task<GTFSStopData?> GetStopAsync(Guid stopId, StopType stopType);
     Task<IEnumerable<Feed>> GetFeedsAsync();
