@@ -1,5 +1,4 @@
-﻿// In a new file, e.g., Alert.cs within komikaan.Data.Models
-namespace komikaan.Data.Models
+﻿namespace komikaan.Data.Models
 {
     public class GTFSAlert
     {
