@@ -20,6 +20,10 @@ namespace komikaan.Data.GTFS
         public string? CongestionLevel { get; set; }
         public string? OccupancyStatus { get; set; }
         public int? OccupancyPercentage { get; set; }
+        /// <summary>
+        /// Stop id of the data_origin
+        /// </summary>
+        public string? EnrouteTo { get; set; }
         public DateTimeOffset? MeasurementTime { get; set; }
         
         // Realtime next stop
