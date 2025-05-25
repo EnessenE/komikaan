@@ -19,4 +19,5 @@ public interface IGTFSContext
     Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin);
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
     Task<IEnumerable<VehiclePosition>?> GetPositionsAsync(string dataOrigin);
+    Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin);
 }

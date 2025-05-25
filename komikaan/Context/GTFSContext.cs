@@ -348,12 +348,25 @@ namespace komikaan.Context
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
             var vehicles = await connection.QueryAsync<VehiclePosition>(
-            @"select * from nearby_vehicles(@longitude, @latitude)",
-                new { longitude = longitude, latitude = latitude },
+            @"select * from nearby_vehicles(@longitude, @latitude, @distance)",
+                new { longitude = longitude, latitude = latitude, distance = 800 },
                 commandType: CommandType.Text
             );
 
             return vehicles;
         }
+
+        public async Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync(); 
+            var alerts = await connection.QueryAsync<GTFSAlert>(
+                "SELECT * FROM public.get_alerts_from_data_origin(@dataOriginParam)",
+                new { dataOriginParam = dataOrigin },
+                commandType: CommandType.Text 
+            );
+
+            return alerts;
+        }
+
     }
 }

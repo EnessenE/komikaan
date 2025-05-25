@@ -47,5 +47,19 @@ namespace komikaan.Controllers
             var feeds = await _gtfs.GetPositionsAsync(dataOrigin);
             return feeds?.ToList();
         }
+
+
+        [HttpGet("{dataOrigin}/alerts")]
+        public async Task<ActionResult<IEnumerable<GTFSAlert>?>> GetAlertsAsync(string dataOrigin)
+        {
+            _logger.LogInformation("Fetching alerts for dataOrigin: {DataOrigin}", dataOrigin);
+            var alerts = await _gtfs.GetAlertsAsync(dataOrigin);
+            if (alerts == null)
+            {
+                _logger.LogWarning("No alerts found or error fetching for dataOrigin: {DataOrigin}", dataOrigin);
+                return NotFound($"Alerts for data origin '{dataOrigin}' not found or an error occurred.");
+            }
+            return Ok(alerts);
+        }
     }
 }
