@@ -1,4 +1,4 @@
-# Komikaan.nl
+# komikaan.nl
 The repository for the website [komikaan.nl](https://komikaan.nl). <br>
 
 This project is heavily inspired by [OVInfo](https://play.google.com/store/apps/details?id=nl.skywave.ovinfo&hl=en) and [DRGL](https://drgl.nl/). These are applications that show dutch public transport info in real time. It's perfect for users who know the route they are taking and any alternate routes. Per stop they simply show information of when transport is leaving, how delayed it easy and some additional miscellaneous info. The problem with these apps is, these instantly fall apart when you cross the border as they work on semi-proprietary protocols. <br>
@@ -25,6 +25,9 @@ The following is a really simplistic overview of the current structure of the pr
 - [GTFS-PSQL-Multisourced](https://github.com/EnessenE/gtfs-psql-multisourced)
     - Working name for the database where the GTFS data ends up in. A database designed to support multiple GTFS feeds + realtime data.
 
+## Side projects / Dependencies
+- [komikaan.GTFS](https://github.com/EnessenE/komikaan-gtfs)
+    - A library that has raw datacontracts for GTFS in .NET without any special modifications
 (*) Projects that are not opensource <b>yet</b>
 
 ### Whats up with the language on the website?
