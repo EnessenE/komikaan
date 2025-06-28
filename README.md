@@ -5,7 +5,7 @@ This project is heavily inspired by [OVInfo](https://play.google.com/store/apps/
 We try to <b>not</b> do that. Most places in the world publish a Google Transit Feed Specifation ([GTFS](https://gtfs.org)) version of their schedules. This project aims to grab all those public feeds, force them into a database and make them easily querable. <br>
 
 The main issue with this project is the inconsistency of IDs across feeds from different suppliers. For instance, "Paris Gare du Nord" station is represented differently in various data sets. In the Dutch data set, it appears as a distinct stop serving only high-speed trains towards the Netherlands. In contrast, the Paris region data set lists it as a stop with numerous local and international lines. Additionally, NMBS publishes it with a completely different name and geographic location kilometers of where it should be to make matters worse. <br> 
-Because of the need to deduplicate and merge data, we can't handle it manually—there are just too many cross-border trip stops. So, we're working on solving this programmatically.
+Because of the need to deduplicate and merge data, we can't handle it manually—there are just too many cross-border trip stops. So, we would like to solve this problem programmatically.
 
 ## Simply flow overview
 The following is a really simplistic overview of the current structure of the project:
@@ -28,6 +28,7 @@ The following is a really simplistic overview of the current structure of the pr
 ## Side projects / Dependencies
 - [komikaan.GTFS](https://github.com/EnessenE/komikaan-gtfs)
     - A library that has raw datacontracts for GTFS in .NET without any special modifications
+  
 (*) Projects that are not opensource <b>yet</b>
 
 ### Whats up with the language on the website?
