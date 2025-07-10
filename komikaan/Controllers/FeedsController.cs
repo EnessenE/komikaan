@@ -34,6 +34,13 @@ namespace komikaan.Controllers
             return feeds?.ToList();
         }
 
+        [HttpGet("{dataOrigin}/agencies")]
+        public async Task<List<Agency>?> GetAgenciesAsync(string dataOrigin)
+        {
+            var data = await _gtfs.GetAgenciesAsync(dataOrigin);
+            return data?.ToList();
+        }
+
         [HttpGet("{dataOrigin}/stops")]
         public async Task<List<GTFSSearchStop>?> GetStopsAsync(string dataOrigin)
         {

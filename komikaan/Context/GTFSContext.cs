@@ -8,8 +8,6 @@ using komikaan.Data.Models;
 using komikaan.Extensions;
 using komikaan.Handlers;
 using komikaan.Interfaces;
-using NetTopologySuite.Geometries;
-using NetTopologySuite.Geometries.Implementation;
 using Npgsql;
 
 namespace komikaan.Context
@@ -84,12 +82,12 @@ namespace komikaan.Context
             }
         }
 
-        public async Task<GTFSTrip> GetTripAsync(Guid tripId, DateTimeOffset date)
+        public async Task<GTFSTrip?> GetTripAsync(Guid tripId, DateTimeOffset date)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             //TODO: Take in account the relative timezone for us + user
 
-            var trip = await dbConnection.QueryFirstAsync<GTFSTrip>(
+            var trip = await dbConnection.QueryFirstOrDefaultAsync<GTFSTrip>(
             @"select * from get_trip_from_id(@tripid) LIMIT 1",
                 new
                 {
@@ -97,14 +95,16 @@ namespace komikaan.Context
                 },
                 commandType: CommandType.Text
             );
-            var foundStops = await dbConnection.QueryAsync<GTFSTripStop>(
-            @"select * from get_stop_times_for_trip(@tripid)",
-                new
-                {
-                    tripid = tripId
-                },
-                commandType: CommandType.Text
-            );
+
+            if (trip != null) { 
+                var foundStops = await dbConnection.QueryAsync<GTFSTripStop>(
+                @"select * from get_stop_times_for_trip(@tripid)",
+                    new
+                    {
+                        tripid = tripId
+                    },
+                    commandType: CommandType.Text
+                );
             // This is hack, we need a "calibration" point for the time as we can't get it from the DB and summer time is a thing
             // Note, this will horribly break around summer/winter time switches
             DateTimeOffset? previousArrival = null;
@@ -131,6 +131,7 @@ namespace komikaan.Context
                 commandType: CommandType.Text
             );
             trip.Shapes = shapes;
+        }
 
             return trip;
         }
@@ -301,6 +302,18 @@ namespace komikaan.Context
             }
 
             return items;
+        }
+
+        public async Task<IEnumerable<Agency>?> GetAgenciesAsync(string dataOrigin)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var data = await connection.QueryAsync<Agency>(
+            @"select * from get_agencies_from_data_origin(@dataorigin)",
+                new { dataorigin = dataOrigin },
+                commandType: CommandType.Text
+            );
+ 
+            return data;
         }
 
         public async Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin)
