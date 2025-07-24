@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using GTFS.Entities.Enumerations;
+using komikaan.GTFS.Models.Static.Enums;
 
 namespace komikaan.Data.GTFS
 {
@@ -20,7 +20,7 @@ namespace komikaan.Data.GTFS
         public IEnumerable<GTFSRoute>? Routes { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public StopType StopType { get; set; }
+        public RouteType StopType { get; set; }
         public IEnumerable<GTFSStopTime>? Departures { get; set; }
         public IEnumerable<GTFSStopData>? RelatedStops { get; set; }
         public IEnumerable<GTFSStopData>? MergedStops { get; set; }

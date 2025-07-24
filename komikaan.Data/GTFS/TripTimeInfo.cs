@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using GTFS.Entities.Enumerations;
+using komikaan.GTFS.Models.Static.Enums;
 
 public class TripTimeInfo
 {
