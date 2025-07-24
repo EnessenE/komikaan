@@ -1,4 +1,4 @@
-﻿using GTFS.Entities.Enumerations;
+﻿using komikaan.GTFS.Models.Static.Enums;
 
 namespace komikaan.Data.GTFS
 {
@@ -9,19 +9,10 @@ namespace komikaan.Data.GTFS
         public string DataOrigin { get; set; }
         public string Agency { get; set; }
         public string Description { get; set; }
-        public StopType Type { get; set; }
+        public RouteType Type { get; set; }
         public string Url { get; set; }
         public string Color { get; set; }
         public string TextColor { get; set; }
         public DateTime LastUpdated { get; set; }
-    }
-
-
-    /// <summary>
-    /// Yeah I know
-    /// </summary>
-    public class GTFSDatabaseRoute : GTFSRoute
-    {
-        public new RouteTypeExtended Type { get; set; }
     }
 }

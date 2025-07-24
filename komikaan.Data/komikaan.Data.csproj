@@ -11,7 +11,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="komikaan.Common" Version="1.1.2" />
+    <PackageReference Include="komikaan.Common" Version="1.1.12" />
+    <PackageReference Include="komikaan.GTFS" Version="4.1.1" />
   </ItemGroup>
 
 </Project>

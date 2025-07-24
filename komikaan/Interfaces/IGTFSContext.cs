@@ -1,7 +1,7 @@
-﻿using GTFS.Entities;
-using GTFS.Entities.Enumerations;
-using komikaan.Data.GTFS;
+﻿using komikaan.Data.GTFS;
 using komikaan.Data.Models;
+using komikaan.GTFS.Models.Static.Enums;
+using komikaan.GTFS.Models.Static.Models;
 
 namespace komikaan.Interfaces;
 
@@ -13,7 +13,7 @@ public interface IGTFSContext
     Task<IEnumerable<GTFSSearchStop>> GetNearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken);
     Task<IEnumerable<VehiclePosition>> GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken);
     Task<GTFSTrip?> GetTripAsync(Guid tripId, DateTimeOffset date);
-    Task<GTFSStopData?> GetStopAsync(Guid stopId, StopType stopType);
+    Task<GTFSStopData?> GetStopAsync(Guid stopId, RouteType stopType);
     Task<IEnumerable<Feed>> GetFeedsAsync();
     Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin);
     Task<IEnumerable<Agency>?> GetAgenciesAsync(string dataOrigin);

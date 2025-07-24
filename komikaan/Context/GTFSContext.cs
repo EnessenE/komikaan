@@ -1,11 +1,11 @@
 ﻿using System.Data;
 using System.Diagnostics;
 using Dapper;
-using GTFS.Entities;
-using GTFS.Entities.Enumerations;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.Extensions;
+using komikaan.GTFS.Models.Static.Enums;
+using komikaan.GTFS.Models.Static.Models;
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using Npgsql;
@@ -122,7 +122,7 @@ namespace komikaan.Context
             }
 
             trip.Stops = foundStops;
-            var shapes = await dbConnection.QueryAsync<Shape>(
+            var shapes = await dbConnection.QueryAsync<KomikaanShape>(
             @"select * from get_shapes_from_trip(@tripid)",
                 new
                 {
@@ -148,7 +148,7 @@ namespace komikaan.Context
             return null;
         }
 
-        public async Task<GTFSStopData?> GetStopAsync(Guid stopId, StopType stopType)
+        public async Task<GTFSStopData?> GetStopAsync(Guid stopId, RouteType routeType)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             var stopwatch = Stopwatch.StartNew();
@@ -157,7 +157,7 @@ namespace komikaan.Context
                 new
                 {
                     stopid = stopId,
-                    stop_type = stopType
+                    stop_type = routeType
                 },
                 commandType: CommandType.Text
             );
@@ -170,7 +170,7 @@ namespace komikaan.Context
                     new
                     {
                         stopid = stopId,
-                        stop_type = stopType
+                        stop_type = routeType
                     },
                     commandType: CommandType.Text
                 );
@@ -184,7 +184,7 @@ namespace komikaan.Context
                     new
                     {
                         stop = stopId,
-                        stop_type = stopType,
+                        stop_type = routeType,
                         time = DateTimeOffset.UtcNow.AddMinutes(-2)
                     },
                     commandType: CommandType.Text
@@ -197,7 +197,7 @@ namespace komikaan.Context
                     new
                     {
                         stop = stopId,
-                        stop_type = stopType
+                        stop_type = routeType
                     },
                     commandType: CommandType.Text
                 );
@@ -208,7 +208,7 @@ namespace komikaan.Context
                     new
                     {
                         stop = stopId,
-                        stop_type = stopType
+                        stop_type = routeType
                     },
                     commandType: CommandType.Text
                 );
@@ -288,7 +288,7 @@ namespace komikaan.Context
         public async Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
-            var data = await connection.QueryAsync<GTFSDatabaseRoute>(
+            var data = await connection.QueryAsync<GTFSRoute>(
             @"select * from get_routes_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
                 commandType: CommandType.Text
@@ -297,7 +297,6 @@ namespace komikaan.Context
             foreach (var item in data)
             {
                 var route = (GTFSRoute)item;
-                route.Type = item.Type.ConvertStopType();
                 items.Add(route);
             }
 

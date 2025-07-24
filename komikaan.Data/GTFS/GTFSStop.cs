@@ -1,4 +1,4 @@
-﻿using GTFS.Entities.Enumerations;
+﻿using komikaan.GTFS.Models.Static.Enums;
 
 namespace komikaan.Data.GTFS
 {
@@ -10,6 +10,6 @@ namespace komikaan.Data.GTFS
         public string ParentStation { get; set; }
         public string Longitude { get; set; }
         public string Latitude { get; set; }
-        public StopType StopType { get; set; }
+        public RouteType StopType { get; set; }
     }
 }
