@@ -8,7 +8,7 @@
     <UserSecretsId>e4e92886-a5e4-4798-967e-714b8d37eec3</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <Version>2.10.3</Version>
+    <Version>2.11.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -26,7 +26,7 @@
     </PackageReference>
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="komikaan.Common" Version="1.1.12" />
-    <PackageReference Include="komikaan.GTFS" Version="3.2.3-enes" />
+    <PackageReference Include="komikaan.GTFS" Version="4.1.1" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
     <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.9.0-beta.2" />

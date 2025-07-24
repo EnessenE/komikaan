@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
-using GTFS.Entities.Enumerations;
-using komikaan.Context;
-using komikaan.Data.API;
+﻿using komikaan.Data.API;
 using komikaan.Data.GTFS;
+using komikaan.GTFS.Models.Static.Enums;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -40,7 +38,7 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{stopId}/{stopType}")]
-        public async Task<GTFSStopData?> GetDeparturesAsync(Guid stopId, StopType stopType)
+        public async Task<GTFSStopData?> GetDeparturesAsync(Guid stopId, RouteType stopType)
         {
             //TODO: 404
             return await _dataSupplier.GetStopAsync(stopId, stopType) ?? null;

@@ -1,6 +1,6 @@
-﻿using GTFS.Entities;
-using komikaan.Data.GTFS;
+﻿using komikaan.Data.GTFS;
 using komikaan.Data.Models;
+using komikaan.GTFS.Models.Static.Models;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 

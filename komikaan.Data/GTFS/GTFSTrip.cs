@@ -1,4 +1,5 @@
-﻿using GTFS.Entities;
+﻿using komikaan.Context;
+using komikaan.GTFS.Models.Static.Models;
 
 namespace komikaan.Data.GTFS
 {
@@ -36,6 +37,6 @@ namespace komikaan.Data.GTFS
 
         public IEnumerable<GTFSTripStop>? Stops { get; set; }
 
-        public IEnumerable<Shape>? Shapes { get; set; }
+        public IEnumerable<KomikaanShape>? Shapes { get; set; }
     }
 }
