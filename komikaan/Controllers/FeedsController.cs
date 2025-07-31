@@ -1,4 +1,5 @@
-﻿using komikaan.Data.GTFS;
+﻿using komikaan.Context;
+using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.GTFS.Models.Static.Models;
 using komikaan.Interfaces;
@@ -35,7 +36,7 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{dataOrigin}/agencies")]
-        public async Task<List<Agency>?> GetAgenciesAsync(string dataOrigin)
+        public async Task<List<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin)
         {
             var data = await _gtfs.GetAgenciesAsync(dataOrigin);
             return data?.ToList();

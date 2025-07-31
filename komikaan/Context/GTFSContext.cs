@@ -3,7 +3,6 @@ using System.Diagnostics;
 using Dapper;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
-using komikaan.Extensions;
 using komikaan.GTFS.Models.Static.Enums;
 using komikaan.GTFS.Models.Static.Models;
 using komikaan.Handlers;
@@ -303,10 +302,10 @@ namespace komikaan.Context
             return items;
         }
 
-        public async Task<IEnumerable<Agency>?> GetAgenciesAsync(string dataOrigin)
+        public async Task<IEnumerable<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
-            var data = await connection.QueryAsync<Agency>(
+            var data = await connection.QueryAsync<DatabaseAgency>(
             @"select * from get_agencies_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
                 commandType: CommandType.Text
