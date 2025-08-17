@@ -13,7 +13,7 @@ public class TripTimeInfo
     public string agency_name { get; set; }
     public string route_long_name { get; set; }
     public string route_short_name { get; set; }
-    public RouteType? route_type { get; set; }
+    public ExtendedRouteType? route_type { get; set; }
     public TimeSpan arrival_time_end { get; set; }
     public TimeSpan departure_time_start { get; set; }
 }

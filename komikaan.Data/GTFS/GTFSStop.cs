@@ -10,6 +10,6 @@ namespace komikaan.Data.GTFS
         public string ParentStation { get; set; }
         public string Longitude { get; set; }
         public string Latitude { get; set; }
-        public RouteType StopType { get; set; }
+        public ExtendedRouteType StopType { get; set; }
     }
 }
