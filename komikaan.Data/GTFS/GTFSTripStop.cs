@@ -13,7 +13,7 @@ namespace komikaan.Data.GTFS
         public string StopHeadsign { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
-        public RouteType StopType { get; set; }
+        public ExtendedRouteType StopType { get; set; }
         public int PickupType { get; set; }
         public int DropOffType { get; set; }
         public string? ScheduleRelationship { get; set; }

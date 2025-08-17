@@ -147,7 +147,7 @@ namespace komikaan.Context
             return null;
         }
 
-        public async Task<GTFSStopData?> GetStopAsync(Guid stopId, RouteType routeType)
+        public async Task<GTFSStopData?> GetStopAsync(Guid stopId, ExtendedRouteType routeType)
         {
             using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
             var stopwatch = Stopwatch.StartNew();

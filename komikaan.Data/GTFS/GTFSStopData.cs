@@ -20,7 +20,7 @@ namespace komikaan.Data.GTFS
         public IEnumerable<GTFSRoute>? Routes { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public RouteType StopType { get; set; }
+        public ExtendedRouteType StopType { get; set; }
         public IEnumerable<GTFSStopTime>? Departures { get; set; }
         public IEnumerable<GTFSStopData>? RelatedStops { get; set; }
         public IEnumerable<GTFSStopData>? MergedStops { get; set; }

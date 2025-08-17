@@ -38,7 +38,7 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{stopId}/{stopType}")]
-        public async Task<GTFSStopData?> GetDeparturesAsync(Guid stopId, RouteType stopType)
+        public async Task<GTFSStopData?> GetDeparturesAsync(Guid stopId, ExtendedRouteType stopType)
         {
             //TODO: 404
             return await _dataSupplier.GetStopAsync(stopId, stopType) ?? null;

@@ -9,7 +9,7 @@ namespace komikaan.Data.GTFS
         public string DataOrigin { get; set; }
         public string Agency { get; set; }
         public string Description { get; set; }
-        public RouteType Type { get; set; }
+        public ExtendedRouteType Type { get; set; }
         public string Url { get; set; }
         public string Color { get; set; }
         public string TextColor { get; set; }
