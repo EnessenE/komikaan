@@ -13,9 +13,9 @@ The following is a really simplistic overview of the current structure of the pr
     - For connecting to the PostgreSQL database
 - [FileDetector](https://github.com/EnessenE/komikaan-file-detector)
     - Responsible for querying external data suppliers and checking if a new GTFS file has been published
-- Harvester*
-    - Responsible for importing GTFS datasets
-    - Publishes imported stops to an RabbitMQ queue
+- [Harvester](https://github.com/EnessenE/komikaan-harvester)
+    - Responsible for importing GTFS datasets into a database
+    - Publishes imported stops to an RabbitMQ queue primary for the Gardener
 - Gardener*
     - Responsible processing each stop to attempt a merge with other relevant stops
     - Responsible for publishing deduplicated stops into the database
