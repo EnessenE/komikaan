@@ -1,6 +1,8 @@
 # komikaan.nl
 The repository for the website [komikaan.nl](https://komikaan.nl). <br>
 
+(As currently I am the sole contributor, expect very odd lazy hacks written around 02:00 in the morning)
+
 This project is heavily inspired by [OVInfo](https://play.google.com/store/apps/details?id=nl.skywave.ovinfo&hl=en) and [DRGL](https://drgl.nl/). These are applications that show dutch public transport info in real time. It's perfect for users who know the route they are taking and any alternate routes. Per stop they simply show information of when transport is leaving, how delayed it easy and some additional miscellaneous info. The problem with these apps is, these instantly fall apart when you cross the border as they work on semi-proprietary protocols. <br>
 We try to <b>not</b> do that. Most places in the world publish a Google Transit Feed Specifation ([GTFS](https://gtfs.org)) version of their schedules. This project aims to grab all those public feeds, force them into a database and make them easily querable. <br>
 
