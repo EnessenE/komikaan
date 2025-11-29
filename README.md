@@ -37,6 +37,6 @@ The following is a really simplistic overview of the current structure of the pr
 The website is a poor mix of Dutch and English at the moment (I promise i18n support) but the backend code is not. Everything is written in English with the rare exception of data models from external supplier. There we are bound to whatever they provide us.
 If you end up contributing, please follow provided standards.
 # Frontend
-The frontend can be found in [EnessenE/komikaan-webapp](https://github.com/EnessenE/komikaan).
+The frontend can be found in [EnessenE/komikaan-webapp](https://github.com/EnessenE/komikaan-webapp).
 # How to run
 Simply open the .sln file. If you use Visual Studio then it should guide you along with what else you need.
