@@ -2,6 +2,7 @@
 using komikaan.Data.GTFS;
 using komikaan.GTFS.Models.Static.Enums;
 using komikaan.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace komikaan.Controllers
@@ -38,11 +39,22 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{stopId}/{stopType}")]
-        public async Task<GTFSStopData?> GetDeparturesAsync(Guid stopId, ExtendedRouteType stopType)
+        public async Task<ActionResult<GTFSStopData>> GetDeparturesAsync(string stopId, ExtendedRouteType stopType)
         {
-            //TODO: 404
-            return await _dataSupplier.GetStopAsync(stopId, stopType) ?? null;
+            if (!string.IsNullOrWhiteSpace(stopId))
+            {
+                var result = await _dataSupplier.GetStopAsync(stopId, stopType);
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(result);
+            }
+            return UnprocessableEntity("Provide a valid stop id");
         }
+
 
         /// <summary>
         /// Based on coordinates, get all nearby stops 

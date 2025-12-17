@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.12.0] - 17-12-2025
+### Changed
+- StopId from Guid to String
+
 [2.12.0] - 17-08-2025
 ### Changed
 - RouteType > ExtendedRouteType

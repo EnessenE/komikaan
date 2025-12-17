@@ -28,7 +28,7 @@ namespace komikaan.Data.GTFS
         public DateTimeOffset? MeasurementTime { get; set; }
         
         // Realtime next stop
-        public Guid? TargetStopId { get; set; }
+        public string? TargetStopId { get; set; }
         public string? TargetStopName { get; set; }
 
        //Route data
