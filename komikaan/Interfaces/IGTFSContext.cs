@@ -15,8 +15,10 @@ public interface IGTFSContext
     Task<IEnumerable<VehiclePosition>> GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken);
     Task<GTFSTrip?> GetTripAsync(Guid tripId, DateTimeOffset date);
     Task<GTFSStopData?> GetStopAsync(string stopId, ExtendedRouteType stopType);
+    Task<GTFSStopData?> GetStopAsync(string dataOrigin, string stopId);
+
     Task<IEnumerable<Feed>> GetFeedsAsync();
-    Task<IEnumerable<GTFSRoute>?> GetRoutesAsync(string dataOrigin);
+    Task<IEnumerable<GTFSRoute>?> GetDataOriginRoutesAsync(string dataOrigin);
     Task<IEnumerable<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin);
     Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin);
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
