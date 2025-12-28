@@ -31,7 +31,7 @@ namespace komikaan.Controllers
         [HttpGet("{dataOrigin}/routes")]
         public async Task<List<GTFSRoute>?> GetRoutesAsync(string dataOrigin)
         {
-            var feeds = await _gtfs.GetRoutesAsync(dataOrigin);
+            var feeds = await _gtfs.GetDataOriginRoutesAsync(dataOrigin);
             return feeds?.ToList();
         }
 

@@ -24,5 +24,6 @@ namespace komikaan.Data.GTFS
         public IEnumerable<GTFSStopTime>? Departures { get; set; }
         public IEnumerable<GTFSStopData>? RelatedStops { get; set; }
         public IEnumerable<GTFSStopData>? MergedStops { get; set; }
+        public Guid PrimaryStop { get; set; }
     }
 }

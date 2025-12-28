@@ -2,7 +2,6 @@
 using komikaan.Data.GTFS;
 using komikaan.GTFS.Models.Static.Enums;
 using komikaan.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace komikaan.Controllers
@@ -25,18 +24,14 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<GTFSSearchStop>> SearchStopsAsync(string filter)
+        public async Task<IEnumerable<GTFSSearchStop>> SearchStopsAsync(string filter, CancellationToken token)
         {
             _logger.LogInformation("Searching for {name}", filter);
-            var stops = await _dataSupplier.FindAsync(filter, CancellationToken.None);
-
-            foreach (var found in stops)
-            {
-                _logger.LogInformation("Found {id} {name}", found.Id, found.Name);
-            }
+            var stops = await _dataSupplier.FindAsync(filter, token);
 
             return stops;
         }
+
 
         [HttpGet("{stopId}/{stopType}")]
         public async Task<ActionResult<GTFSStopData>> GetDeparturesAsync(string stopId, ExtendedRouteType stopType)
@@ -55,6 +50,23 @@ namespace komikaan.Controllers
             return UnprocessableEntity("Provide a valid stop id");
         }
 
+
+        [HttpGet("exact/{dataOrigin}/{stopId}")]
+        public async Task<ActionResult<GTFSStopData>> GetDeparturesForSpecificStopAsync(string dataOrigin, string stopId)
+        {
+            if (!string.IsNullOrWhiteSpace(stopId))
+            {
+                var result = await _dataSupplier.GetStopAsync(dataOrigin, stopId);
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(result);
+            }
+            return UnprocessableEntity("Provide a valid stop id");
+        }
 
         /// <summary>
         /// Based on coordinates, get all nearby stops 
