@@ -3,6 +3,7 @@
     public class Feed
     {
         public string Name { get; set; }
+        public string Credits { get; set; }
         public TimeSpan Interval { get; set; }
         public DateTimeOffset? LastChecked { get; set; }
         public string State { get; set; }
