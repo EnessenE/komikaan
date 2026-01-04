@@ -180,6 +180,7 @@ namespace komikaan.Context
 
             if (stop == null)
                 return null;
+            stop.PrimaryStop = Guid.Parse(stopId);
 
             stop.MergedStops = await GetMergedStopsAsync(dbConnection, stopId, routeType);
             _logger.LogInformation("Retrieved merged stops {time}", stopwatch.Elapsed);
@@ -403,6 +404,7 @@ namespace komikaan.Context
             return vehicles;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1551:Method overload should call another overload", Justification = "<Pending>")]
         public async Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
@@ -415,5 +417,22 @@ namespace komikaan.Context
             return alerts;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1551:Method overload should call another overload", Justification = "<Pending>")]
+        public async Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var alerts = await connection.QueryAsync<GTFSAlert>(
+                "SELECT * FROM public.get_alerts_from_stop(@stop_id, @stop_type)",
+                new
+                {
+                    stop_id = stopId,
+                    stop_type = stopType
+                },
+                commandType: CommandType.Text
+            );
+
+            return alerts;
+        }
     }
 }
+

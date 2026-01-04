@@ -24,4 +24,5 @@ public interface IGTFSContext
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
     Task<IEnumerable<VehiclePosition>?> GetPositionsAsync(string dataOrigin);
     Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin);
+    Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType);
 }
