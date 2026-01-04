@@ -51,6 +51,20 @@ namespace komikaan.Controllers
         }
 
 
+        [HttpGet("{stopId}/{stopType}/alerts")]
+        public async Task<ActionResult<GTFSStopData>> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType)
+        {
+            var result = await _dataSupplier.GetAlertsAsync(stopId, stopType);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+
+
         [HttpGet("exact/{dataOrigin}/{stopId}")]
         public async Task<ActionResult<GTFSStopData>> GetDeparturesForSpecificStopAsync(string dataOrigin, string stopId)
         {
