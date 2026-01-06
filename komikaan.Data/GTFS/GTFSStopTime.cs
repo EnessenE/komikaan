@@ -26,5 +26,8 @@
         public string RouteColor { get; set; }
         public string RouteTextColor { get; set; }
         public bool? RealTime { get; set; }
+        public string? StartsFrom { get; set; }
+        public bool? StartsBefore { get; set; }
+        public string? EndsAt { get; set; }
     }
 }
