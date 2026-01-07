@@ -16,7 +16,8 @@ namespace komikaan.Data.GTFS
         public string PlatformCode { get; set; }
         public string DataOrigin { get; set; }
         public DateTime LastUpdated { get; set; }
-        public string? ScheduleRelationship { get; set; }
+        public string StopScheduleRelationship { get; set; }
+        public string TripScheduleRelationship { get; set; }
         public IEnumerable<GTFSRoute>? Routes { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
