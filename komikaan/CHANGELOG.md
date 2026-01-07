@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [2.16.2] - 07-01-2025
 ### Added
 - Split up ScheduleRelationShips into StopScheduleRelationship and TripScheduleRelationship
+### Removed
+- Remove legacy NS API models
 
 [2.16.1] - 06-01-2025
 ### Added
