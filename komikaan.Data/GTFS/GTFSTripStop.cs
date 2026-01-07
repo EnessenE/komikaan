@@ -16,7 +16,8 @@ namespace komikaan.Data.GTFS
         public ExtendedRouteType StopType { get; set; }
         public int PickupType { get; set; }
         public int DropOffType { get; set; }
-        public string? ScheduleRelationship { get; set; }
+        public string StopScheduleRelationship { get; set; }
+        public string TripScheduleRelationship { get; set; }
         public DateTimeOffset? ActualArrivalTime { get; set; }
         public DateTimeOffset? ActualDepartureTime { get; set; }
         public DateTimeOffset? PlannedArrivalTime { get; set; }
