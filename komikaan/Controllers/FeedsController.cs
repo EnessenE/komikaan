@@ -28,6 +28,17 @@ namespace komikaan.Controllers
             return feeds?.ToList();
         }
 
+        /// <summary>
+        /// Returns the converage of every feed
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("coverage")]
+
+        public IReadOnlyList<CoverageDataPoint> GetCoverage()
+        {
+            return _gtfs.GetCoverage().ToList();
+        }
+
         [HttpGet("{dataOrigin}/routes")]
         public async Task<List<GTFSRoute>?> GetRoutesAsync(string dataOrigin)
         {
@@ -50,7 +61,7 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{dataOrigin}/positions")]
-        public async Task<List<VehiclePosition>?> GetPositionsAsync(string dataOrigin)
+        public async Task<List<KomIkaanVehiclePosition>?> GetPositionsAsync(string dataOrigin)
         {
             var feeds = await _gtfs.GetPositionsAsync(dataOrigin);
             return feeds?.ToList();

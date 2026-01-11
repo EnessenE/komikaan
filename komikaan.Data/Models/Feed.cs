@@ -24,7 +24,7 @@
         public int Vehicles { get; set; }
         public bool RealTime { get; set; }
 
-        public List<VehiclePosition> Positions { get; set; }
+        public List<KomIkaanVehiclePosition> Positions { get; set; }
     }
 
 }
