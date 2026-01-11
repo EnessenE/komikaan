@@ -13,7 +13,7 @@ namespace komikaan.Services
         {
             _dataSuppliers = dataSuppliers;
             _logger = logger;
-            _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+            _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(3));
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

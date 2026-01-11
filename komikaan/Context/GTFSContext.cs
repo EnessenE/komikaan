@@ -1,14 +1,14 @@
 ﻿using System.Data;
-using System.Data.Common;
 using System.Diagnostics;
 using Dapper;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.GTFS.Models.Static.Enums;
-using komikaan.GTFS.Models.Static.Models;
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using Npgsql;
+
+using Shape = komikaan.GTFS.Models.Static.Models.Shape;
 
 namespace komikaan.Context
 {
@@ -25,6 +25,7 @@ namespace komikaan.Context
         private readonly string _connectionString;
         private readonly NpgsqlDataSource _dataSource;
         private List<Feed> _allFeeds;
+        private List<CoverageDataPoint> _coveragePoints;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "This entire class needs a refactor")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
@@ -44,14 +45,17 @@ namespace komikaan.Context
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Finished reading GTFS data");
+            _logger.LogInformation("Started initial loading of data");
             _allFeeds = (await CacheFeedsAsync()).ToList();
+            _coveragePoints = (await GetCoverageAsync()).ToList();
+            _logger.LogInformation("Finished initial loading of data");
             await Task.CompletedTask;
         }
 
         public async Task LoadRelevantDataAsync(CancellationToken cancellationToken)
         {
             _allFeeds = (await CacheFeedsAsync()).ToList();
+            _coveragePoints = (await GetCoverageAsync()).ToList();
         }
 
         public async Task<IEnumerable<GTFSSearchStop>> FindAsync(string text, CancellationToken cancellationToken)
@@ -380,10 +384,10 @@ namespace komikaan.Context
             return data;
         }
 
-        public async Task<IEnumerable<VehiclePosition>?> GetPositionsAsync(string dataOrigin)
+        public async Task<IEnumerable<KomIkaanVehiclePosition>?> GetPositionsAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
-            var data = await connection.QueryAsync<VehiclePosition>(
+            var data = await connection.QueryAsync<KomIkaanVehiclePosition>(
             @"select * from get_positions_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
                 commandType: CommandType.Text
@@ -392,10 +396,10 @@ namespace komikaan.Context
             return data;
         }
 
-        async Task<IEnumerable<VehiclePosition>> IGTFSContext.GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken)
+        async Task<IEnumerable<KomIkaanVehiclePosition>> IGTFSContext.GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
-            var vehicles = await connection.QueryAsync<VehiclePosition>(
+            var vehicles = await connection.QueryAsync<KomIkaanVehiclePosition>(
             @"select * from nearby_vehicles(@longitude, @latitude, @distance)",
                 new { longitude = longitude, latitude = latitude, distance = 800 },
                 commandType: CommandType.Text
@@ -432,6 +436,22 @@ namespace komikaan.Context
             );
 
             return alerts;
+        }
+
+        public IEnumerable<CoverageDataPoint> GetCoverage()
+        {
+            return _coveragePoints;
+        }
+
+        private async Task<IEnumerable<CoverageDataPoint>> GetCoverageAsync()
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var data = await connection.QueryAsync<CoverageDataPoint>(
+                "SELECT * FROM public.api_get_coverage_from_feeds()",
+                commandType: CommandType.Text, commandTimeout: 90
+            );
+
+            return data;
         }
     }
 }

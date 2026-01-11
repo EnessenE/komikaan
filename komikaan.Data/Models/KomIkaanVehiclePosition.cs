@@ -1,6 +1,6 @@
 ﻿namespace komikaan.Data.Models
 {
-    public class VehiclePosition
+    public class KomIkaanVehiclePosition
     {
         public DateTimeOffset LastUpdated { get; set; }
         public string Id { get; set; }
