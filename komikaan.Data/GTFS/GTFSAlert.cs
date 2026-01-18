@@ -8,7 +8,6 @@
         public DateTimeOffset LastUpdated { get; set; }
         public string  Id { get; set; }
         public bool IsDeleted { get; set; }
-        public string? ActivePeriods { get; set; } 
         public string? Cause { get; set; }
         public string? Effect { get; set; }
         public string? Url { get; set; }
@@ -17,5 +16,7 @@
         public string? TtsHeaderText { get; set; }
         public string? TtsDescriptionText { get; set; }
         public string? SeverityLevel { get; set; }
+        public DateTimeOffset? StartTime { get; set; }
+        public DateTimeOffset? EndTime { get; set; }
     }
 }
