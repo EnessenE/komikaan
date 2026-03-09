@@ -69,10 +69,10 @@ namespace komikaan.Controllers
 
 
         [HttpGet("{dataOrigin}/alerts")]
-        public async Task<ActionResult<IEnumerable<GTFSAlert>?>> GetAlertsAsync(string dataOrigin)
+        public async Task<ActionResult<IEnumerable<GTFSAlert>?>> GetAlertsAsync(string dataOrigin, [FromQuery] int limit = 100, [FromQuery] int offset = 0)
         {
-            _logger.LogInformation("Fetching alerts for dataOrigin: {DataOrigin}", dataOrigin);
-            var alerts = await _gtfs.GetAlertsAsync(dataOrigin);
+            _logger.LogInformation("Fetching alerts for dataOrigin: {DataOrigin}, limit: {Limit}, offset: {Offset}", dataOrigin, limit, offset);
+            var alerts = await _gtfs.GetAlertsAsync(dataOrigin, limit, offset);
             if (alerts == null)
             {
                 _logger.LogWarning("No alerts found or error fetching for dataOrigin: {DataOrigin}", dataOrigin);
