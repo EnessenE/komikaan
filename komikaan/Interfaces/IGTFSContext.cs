@@ -23,7 +23,7 @@ public interface IGTFSContext
     Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin);
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
     Task<IEnumerable<KomIkaanVehiclePosition>?> GetPositionsAsync(string dataOrigin);
-    Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin);
-    Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType);
+    Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin, int limit, int offset);
+    Task<IEnumerable<GTFSAlert>?> GetAlertsForStopAsync(Guid stopId, ExtendedRouteType stopType);
     IEnumerable<CoverageDataPoint> GetCoverage();
 }

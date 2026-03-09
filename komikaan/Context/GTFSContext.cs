@@ -408,13 +408,12 @@ namespace komikaan.Context
             return vehicles;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1551:Method overload should call another overload", Justification = "<Pending>")]
-        public async Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin)
+        public async Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin, int limit, int offset)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
             var alerts = await connection.QueryAsync<GTFSAlert>(
-                "SELECT * FROM public.get_alerts_from_data_origin(@dataOriginParam)",
-                new { dataOriginParam = dataOrigin },
+                "SELECT * FROM public.get_alerts_from_data_origin(@dataOriginParam, @limitParam, @offsetParam)",
+                new { dataOriginParam = dataOrigin, limitParam = limit, offsetParam = offset },
                 commandType: CommandType.Text
             );
 
@@ -422,7 +421,7 @@ namespace komikaan.Context
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1551:Method overload should call another overload", Justification = "<Pending>")]
-        public async Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType)
+        public async Task<IEnumerable<GTFSAlert>?> GetAlertsForStopAsync(Guid stopId, ExtendedRouteType stopType)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
             var alerts = await connection.QueryAsync<GTFSAlert>(
