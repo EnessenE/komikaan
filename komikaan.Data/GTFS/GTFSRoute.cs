@@ -4,6 +4,7 @@ namespace komikaan.Data.GTFS
 {
     public class GTFSRoute
     {
+        public string Id { get; set; }
         public string ShortName { get; set; }
         public string LongName { get; set; }
         public string DataOrigin { get; set; }
