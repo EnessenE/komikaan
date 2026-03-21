@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using komikaan.Interfaces;
+using komikaan.Settings;
+using Microsoft.Extensions.Options;
 
 namespace komikaan.Services
 {
@@ -8,12 +10,14 @@ namespace komikaan.Services
         private readonly IEnumerable<IGTFSContext> _dataSuppliers;
         private readonly ILogger<DataService> _logger;
         private readonly PeriodicTimer _periodicTimer;
+        private readonly DataServiceSettings _settings;
 
-        public DataService(IEnumerable<IGTFSContext> dataSuppliers, ILogger<DataService> logger)
+        public DataService(IEnumerable<IGTFSContext> dataSuppliers, ILogger<DataService> logger, IOptions<DataServiceSettings> settings)
         {
             _dataSuppliers = dataSuppliers;
             _logger = logger;
             _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(3));
+            _settings = settings.Value;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -85,7 +89,14 @@ namespace komikaan.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await StartAllDataSuppliersAsync(cancellationToken);
+            if (_settings.StartSuppliers)
+            {
+                await StartAllDataSuppliersAsync(cancellationToken);
+            }
+            else
+            {
+                _logger.LogInformation("StartSuppliers is disabled — skipping data supplier initialization");
+            }
             await base.StartAsync(cancellationToken);
         }
 

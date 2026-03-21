@@ -343,6 +343,62 @@ namespace komikaan.Context
             return items;
         }
 
+        public async Task<GTFSRouteDetails?> GetRouteAsync(string dataOrigin, string routeId)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var route = await connection.QueryFirstOrDefaultAsync<GTFSRouteDetails>(
+                @"select * from get_route_from_id(@dataorigin, @routeid) LIMIT 1",
+                new
+                {
+                    dataorigin = dataOrigin,
+                    routeid = routeId
+                },
+                commandType: CommandType.Text
+            );
+
+            if (route == null)
+            {
+                return null;
+            }
+
+            var stops = await connection.QueryAsync<GTFSSearchStop>(
+                @"select * from get_stops_from_route(@dataorigin, @routeid)",
+                new
+                {
+                    dataorigin = dataOrigin,
+                    routeid = routeId
+                },
+                commandType: CommandType.Text
+            );
+
+            foreach (var stop in stops)
+            {
+                FixCoordinates(stop);
+            }
+
+            var shapes = await connection.QueryAsync<KomikaanShape>(
+                @"select * from get_shapes_from_route(@dataorigin, @routeid)",
+                new
+                {
+                    dataorigin = dataOrigin,
+                    routeid = routeId
+                },
+                commandType: CommandType.Text
+            );
+
+            route.Shapes = shapes;
+            route.Stops = stops;
+
+            var timetable = await connection.QueryAsync<GTFSRouteTimetableRow>(
+                @"select * from get_timetable_from_route(@dataorigin, @routeid)",
+                new { dataorigin = dataOrigin, routeid = routeId },
+                commandType: CommandType.Text
+            );
+            route.Timetable = timetable;
+
+            return route;
+        }
+
         public async Task<IEnumerable<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();

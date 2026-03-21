@@ -2,6 +2,7 @@
 using komikaan.Handlers;
 using komikaan.Interfaces;
 using komikaan.Services;
+using komikaan.Settings;
 using Serilog;
 using System.Reflection;
 using OpenTelemetry.Metrics;
@@ -62,6 +63,7 @@ internal class Program
         });
 
         AddDataSuppliers(builder);
+        builder.Services.Configure<DataServiceSettings>(builder.Configuration.GetSection(DataServiceSettings.SectionName));
         builder.Services.AddHostedService<DataService>();
 
         SetupApplication(builder, corsName);
