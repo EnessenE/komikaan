@@ -348,55 +348,54 @@ namespace komikaan.Context
             await using var connection = await _dataSource.OpenConnectionAsync();
             var route = await connection.QueryFirstOrDefaultAsync<GTFSRouteDetails>(
                 @"select * from get_route_from_id(@dataorigin, @routeid) LIMIT 1",
-                new
-                {
-                    dataorigin = dataOrigin,
-                    routeid = routeId
-                },
+                new { dataorigin = dataOrigin, routeid = routeId },
                 commandType: CommandType.Text
             );
 
-            if (route == null)
-            {
-                return null;
-            }
+            if (route == null) return null;
 
             var stops = await connection.QueryAsync<GTFSSearchStop>(
                 @"select * from get_stops_from_route(@dataorigin, @routeid)",
-                new
-                {
-                    dataorigin = dataOrigin,
-                    routeid = routeId
-                },
+                new { dataorigin = dataOrigin, routeid = routeId },
                 commandType: CommandType.Text
             );
-
-            foreach (var stop in stops)
-            {
-                FixCoordinates(stop);
-            }
+            foreach (var stop in stops) FixCoordinates(stop);
 
             var shapes = await connection.QueryAsync<KomikaanShape>(
                 @"select * from get_shapes_from_route(@dataorigin, @routeid)",
-                new
-                {
-                    dataorigin = dataOrigin,
-                    routeid = routeId
-                },
+                new { dataorigin = dataOrigin, routeid = routeId },
+                commandType: CommandType.Text
+            );
+
+            var dateRange = await connection.QueryFirstOrDefaultAsync<GTFSRouteServiceDateRange>(
+                @"select * from get_service_date_range_from_route(@dataorigin, @routeid) LIMIT 1",
+                new { dataorigin = dataOrigin, routeid = routeId },
                 commandType: CommandType.Text
             );
 
             route.Shapes = shapes;
             route.Stops = stops;
+            route.FirstRun = dateRange?.FirstRun;
+            route.LastRun = dateRange?.LastRun;
 
             var timetable = await connection.QueryAsync<GTFSRouteTimetableRow>(
-                @"select * from get_timetable_from_route(@dataorigin, @routeid)",
-                new { dataorigin = dataOrigin, routeid = routeId },
+                @"select * from get_timetable_from_route(@dataorigin, @routeid, @target_date)",
+                new { dataorigin = dataOrigin, routeid = routeId, target_date = DateOnly.FromDateTime(DateTime.Today) },
                 commandType: CommandType.Text
             );
             route.Timetable = timetable;
 
             return route;
+        }
+
+        public async Task<IEnumerable<GTFSRouteTimetableRow>> GetTimetableAsync(string dataOrigin, string routeId, DateOnly? date)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<GTFSRouteTimetableRow>(
+                @"select * from get_timetable_from_route(@dataorigin, @routeid, @target_date)",
+                new { dataorigin = dataOrigin, routeid = routeId, target_date = date },
+                commandType: CommandType.Text
+            );
         }
 
         public async Task<IEnumerable<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin)
