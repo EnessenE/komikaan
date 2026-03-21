@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.19.0] - 21-03-2026
+### Added
+- Route details endpoint with shapes, merged stops, timetable rows, and service date range metadata
+- Route timetable endpoint with date filtering and `404` for dates with no trips
+- Per-stop trip timezone data so trip times can be rendered in each stop's local timezone
+### Changed
+- Route stop ordering now follows a canonical trip sequence instead of unstable grouping order
+- Route details now default timetable loading to the current day
+- `DataService` startup is configurable through `DataService.StartSuppliers`
+### Fixed
+- Route lookup supports route id and short name consistently across SQL and API calls
+- Timetable calendar exception matching now uses textual `added` / `removed` values case-insensitively
+
 [2.18.0] - 09-03-2026
 ### Added
 - Pagination support for alerts endpoint with `limit` and `offset` query parameters
