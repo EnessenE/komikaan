@@ -22,6 +22,7 @@ namespace komikaan.Data.GTFS
         public DateTimeOffset? ActualDepartureTime { get; set; }
         public DateTimeOffset? PlannedArrivalTime { get; set; }
         public DateTimeOffset? PlannedDepartureTime { get; set; }
+        public string? TimeZone { get; set; }
         public string PlannedPlatform { get => PlatformCode; }
         public string ActualPlatform { get => PlatformCode; }
     }

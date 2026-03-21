@@ -19,6 +19,8 @@ public interface IGTFSContext
 
     Task<IEnumerable<Feed>> GetFeedsAsync();
     Task<IEnumerable<GTFSRoute>?> GetDataOriginRoutesAsync(string dataOrigin);
+    Task<GTFSRouteDetails?> GetRouteAsync(string dataOrigin, string routeId);
+    Task<IEnumerable<GTFSRouteTimetableRow>> GetTimetableAsync(string dataOrigin, string routeId, DateOnly? date);
     Task<IEnumerable<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin);
     Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin);
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
