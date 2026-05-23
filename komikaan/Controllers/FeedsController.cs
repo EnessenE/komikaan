@@ -28,6 +28,20 @@ namespace komikaan.Controllers
             return feeds?.ToList();
         }
 
+        [HttpGet("names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetFeedNamesAsync()
+        {
+            var names = await _gtfs.GetFeedNamesAsync();
+            return Ok(names);
+        }
+
+        [HttpGet("realtime-names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetRealtimeFeedNamesAsync()
+        {
+            var names = await _gtfs.GetRealtimeFeedNamesAsync();
+            return Ok(names);
+        }
+
         /// <summary>
         /// Returns the converage of every feed
         /// </summary>
@@ -60,6 +74,13 @@ namespace komikaan.Controllers
             return feeds?.ToList();
         }
 
+        [HttpGet("{dataOrigin}/shapes")]
+        public async Task<List<Shape>?> GetShapesAsync(string dataOrigin)
+        {
+            var shapes = await _gtfs.GetShapesAsync(dataOrigin);
+            return shapes?.ToList();
+        }
+
         [HttpGet("{dataOrigin}/positions")]
         public async Task<List<KomIkaanVehiclePosition>?> GetPositionsAsync(string dataOrigin)
         {
@@ -79,6 +100,15 @@ namespace komikaan.Controllers
                 return NotFound($"Alerts for data origin '{dataOrigin}' not found or an error occurred.");
             }
             return Ok(alerts);
+        }
+
+        [HttpGet("delays/top")]
+        public async Task<ActionResult<IEnumerable<TopDelayedStop>>> GetTopDelayedStopsAsync([FromQuery] int limit, [FromQuery] string? dataOrigin)
+        {
+            var safeLimit = limit <= 0 ? 25 : limit;
+            _logger.LogInformation("Fetching top delayed stops. limit: {Limit}, dataOrigin: {DataOrigin}", safeLimit, dataOrigin);
+            var topStops = await _gtfs.GetTopDelayedStopsAsync(safeLimit, dataOrigin);
+            return Ok(topStops);
         }
     }
 }
