@@ -378,7 +378,10 @@ namespace komikaan.Context
                 new { dataorigin = dataOrigin, routeid = routeId },
                 commandType: CommandType.Text
             );
-            foreach (var stop in stops) FixCoordinates(stop);
+            foreach (var stop in stops)
+            {
+                FixCoordinates(stop);
+            }
 
             var shapes = await connection.QueryAsync<KomikaanShape>(
                 @"select * from get_shapes_from_route(@dataorigin, @routeid)",

@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace komikaan.Handlers
 {
@@ -8,14 +9,29 @@ namespace komikaan.Handlers
     /// </summary>
     public class SqlDateOnlyTypeHandler : SqlMapper.TypeHandler<DateOnly>
     {
-        public override void SetValue(IDbDataParameter parameter, DateOnly date)
+        public override DateOnly Parse(object value)
         {
-            parameter.Value = date;
-            parameter.DbType = DbType.Date;
+            if (value is DateOnly dateOnly)
+            {
+                return dateOnly;
+            }
+
+            if (value is DateTime dateTime)
+            {
+                return DateOnly.FromDateTime(dateTime);
+            }
+
+            return DateOnly.FromDateTime(Convert.ToDateTime(value));
         }
 
-        public override DateOnly Parse(object value) => DateOnly.FromDateTime((DateTime)value);
+        public override void SetValue([DisallowNull] IDbDataParameter parameter, DateOnly value)
+        {
+            // Npgsql handles DateOnly natively now
+            parameter.Value = value;
+            parameter.DbType = DbType.Date;
+        }
     }
+
 
     public class SqlTimeOnlyTypeHandler : SqlMapper.TypeHandler<TimeOnly>
     {
@@ -25,6 +41,19 @@ namespace komikaan.Handlers
             parameter.DbType = DbType.Time;
         }
 
-        public override TimeOnly Parse(object value) => TimeOnly.FromTimeSpan((TimeSpan)value);
+        public override TimeOnly Parse(object value)
+        {
+            if (value is TimeOnly timeOnly)
+            {
+                return timeOnly;
+            }
+
+            if (value is TimeSpan timeSpan)
+            {
+                return TimeOnly.FromTimeSpan(timeSpan);
+            }
+
+            return TimeOnly.FromDateTime(Convert.ToDateTime(value));
+        }
     }
 }

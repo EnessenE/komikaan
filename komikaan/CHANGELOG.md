@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Bump dependencies
 
+[2.21.1] - 23-08-2026
+### Changed
+- Dependency update in 2.20.0 caused DateOnly and TimeOnly objects to break
+
 [2.21.0] - 23-08-2026
 ### Added
 - /feeds/names
