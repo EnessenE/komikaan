@@ -96,5 +96,18 @@ namespace komikaan.Controllers
             data.Vehicles = await _dataSupplier.GetNearbyVehiclesAsync(longitude, latitude, cancellationToken);
             return data;
         }
+
+        [HttpGet("train-stations")]
+        public async Task<ActionResult<IEnumerable<TrainStationPerformance>>> GetTrainStationsAsync([FromQuery] TrainStationViewportQuery query)
+        {
+            if (query.HasBounds)
+            {
+                var boundedStations = await _dataSupplier.GetTrainStationPerformanceInBoundsAsync(query);
+                return Ok(boundedStations);
+            }
+
+            var stations = await _dataSupplier.GetTrainStationPerformanceAsync();
+            return Ok(stations);
+        }
     }
 }

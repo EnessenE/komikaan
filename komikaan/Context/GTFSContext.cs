@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Diagnostics;
 using Dapper;
+using komikaan.Data.API;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.GTFS.Models.Static.Enums;
@@ -325,6 +326,24 @@ namespace komikaan.Context
             return Task.FromResult(_allFeeds.AsEnumerable());
         }
 
+        public async Task<IEnumerable<string>> GetFeedNamesAsync()
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<string>(
+                @"SELECT * FROM public.get_all_feed_names()",
+                commandType: CommandType.Text
+            );
+        }
+
+        public async Task<IEnumerable<string>> GetRealtimeFeedNamesAsync()
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<string>(
+                @"SELECT DISTINCT supplier_configuration_name FROM public.realtime_configurations WHERE enabled = true ORDER BY supplier_configuration_name",
+                commandType: CommandType.Text
+            );
+        }
+
         public async Task<IEnumerable<GTFSRoute>?> GetDataOriginRoutesAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
@@ -439,6 +458,127 @@ namespace komikaan.Context
             return data;
         }
 
+        public async Task<IEnumerable<TrainStationPerformance>> GetTrainStationPerformanceAsync()
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<TrainStationPerformance>(
+                @"SELECT * FROM public.get_train_station_performance()",
+                commandType: CommandType.Text
+            );
+        }
+
+        public async Task<IEnumerable<TrainStationPerformance>> GetTrainStationPerformanceInBoundsAsync(TrainStationViewportQuery query)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var normalizedLimit = Math.Clamp(query.Limit, 1, 3000);
+
+            return await connection.QueryAsync<TrainStationPerformance>(
+                @"SELECT * FROM public.get_train_station_performance_in_bounds(@minLat, @maxLat, @minLon, @maxLon, @limit)",
+                new
+                {
+                    minLat = query.MinLatitude,
+                    maxLat = query.MaxLatitude,
+                    minLon = query.MinLongitude,
+                    maxLon = query.MaxLongitude,
+                    limit = normalizedLimit
+                },
+                null,
+                30,
+                CommandType.Text
+            );
+        }
+
+        public async Task<MapViewportData> GetMapViewportDataAsync(MapViewportQuery query)
+        {
+            var normalizedShapeLimit = Math.Clamp(query.ShapeLimit, 5, 3000);
+            var normalizedStopLimit = Math.Clamp(query.StopLimit, 0, 20000);
+            var normalizedZoom = Math.Clamp(query.Zoom, 1, 20);
+
+            // Run shapes and stops queries in parallel — each needs its own connection.
+            var shapesTask = FetchShapesAsync(query, normalizedShapeLimit, normalizedZoom);
+            var stopsTask = FetchStopsAsync(query, normalizedStopLimit);
+
+            await Task.WhenAll(shapesTask, stopsTask);
+
+            var stops = stopsTask.Result.ToList();
+            foreach (var stop in stops)
+            {
+                FixCoordinates(stop);
+            }
+
+            return new MapViewportData
+            {
+                Shapes = shapesTask.Result,
+                Stops = stops
+            };
+        }
+
+        private async Task<IEnumerable<MapShapePoint>> FetchShapesAsync(MapViewportQuery query, int shapeLimit, int zoom)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<MapShapePoint>(
+                @"SELECT * FROM public.get_map_shapes_in_bounds(@minLat, @maxLat, @minLon, @maxLon, @shapeLimit, @zoom, @fullShapes)",
+                new
+                {
+                    minLat = query.MinLatitude,
+                    maxLat = query.MaxLatitude,
+                    minLon = query.MinLongitude,
+                    maxLon = query.MaxLongitude,
+                    shapeLimit,
+                    zoom,
+                    fullShapes = query.FullShapes
+                },
+                null,
+                30,
+                CommandType.Text
+            );
+        }
+
+        private async Task<IEnumerable<GTFSSearchStop>> FetchStopsAsync(MapViewportQuery query, int stopLimit)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<GTFSSearchStop>(
+                @"SELECT * FROM public.get_map_stops_in_bounds(@minLat, @maxLat, @minLon, @maxLon, @stopLimit)",
+                new
+                {
+                    minLat = query.MinLatitude,
+                    maxLat = query.MaxLatitude,
+                    minLon = query.MinLongitude,
+                    maxLon = query.MaxLongitude,
+                    stopLimit
+                },
+                null,
+                30,
+                CommandType.Text
+            );
+        }
+
+        public async Task<IEnumerable<GTFSRoute>> GetRoutesNearPointAsync(double latitude, double longitude, double bboxDegrees)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var routes = await connection.QueryAsync<GTFSRoute>(
+                @"SELECT * FROM public.get_routes_near_point(@lat, @lon, @bbox)",
+                new { lat = latitude, lon = longitude, bbox = bboxDegrees },
+                null,
+                30,
+                CommandType.Text
+            );
+            return routes;
+        }
+
+        public async Task<IEnumerable<GTFSRoute>> GetRoutesByShapeAsync(string dataOrigin, string shapeId)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var routes = await connection.QueryAsync<GTFSRoute>(
+                @"SELECT * FROM public.get_routes_from_shape(@dataOrigin, @shapeId)",
+                new { dataOrigin, shapeId },
+                null,
+                30,
+                CommandType.Text
+            );
+            return routes;
+        }
+
         public async Task<IEnumerable<KomIkaanVehiclePosition>?> GetPositionsAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
@@ -490,6 +630,23 @@ namespace komikaan.Context
             );
 
             return alerts;
+        }
+
+        public async Task<IEnumerable<TopDelayedStop>> GetTopDelayedStopsAsync(int limit, string? dataOrigin)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var normalizedLimit = Math.Clamp(limit, 1, 100);
+
+            var delayedStops = await connection.QueryAsync<TopDelayedStop>(
+                @"SELECT *
+                  FROM public.get_top_delayed_stops()
+                  WHERE (@dataorigin IS NULL OR data_origin = @dataorigin)
+                  LIMIT @limit",
+                new { dataorigin = dataOrigin, limit = normalizedLimit },
+                commandType: CommandType.Text
+            );
+
+            return delayedStops;
         }
 
         public IEnumerable<CoverageDataPoint> GetCoverage()
