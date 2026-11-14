@@ -243,7 +243,7 @@ namespace komikaan.Context
             ExtendedRouteType routeType)
         {
             // TODO: take user timezone into account
-            return await dbConnection.QueryAsync<GTFSStopTime>(
+            var rows = await dbConnection.QueryAsync<GTFSStopTime>(
                 @"select * from get_stop_times_from_stop(@stop, @stop_type, @time)",
                 new
                 {
@@ -253,6 +253,17 @@ namespace komikaan.Context
                 },
                 commandType: CommandType.Text
             );
+
+            // Large stations have many related platform stops, and feeds can contain the same
+            // physical departure as several trips (one per platform). Deduplicate on the
+            // displayed identity (origin + route + train number + headsign + time), preferring
+            // the row that carries realtime data.
+            return rows
+                .GroupBy(departure => (departure.DataOrigin, departure.RouteShortName, departure.Shortname, departure.Headsign, departure.PlannedDepartureTime ?? departure.DepartureTime ?? departure.ArrivalTime))
+                .Select(group => group
+                    .OrderByDescending(row => row.RealTime == true)
+                    .ThenBy(row => row.PlannedPlatform, StringComparer.Ordinal)
+                    .First());
         }
 
         private async Task<IEnumerable<GTFSStopData>> GetRelatedStopsAsync(
@@ -653,6 +664,7 @@ namespace komikaan.Context
                 @"SELECT *
                   FROM public.get_top_delayed_stops()
                   WHERE (@dataorigin IS NULL OR data_origin = @dataorigin)
+                  ORDER BY average_delay DESC NULLS LAST, cancellation_count DESC
                   LIMIT @limit",
                 new { dataorigin = dataOrigin, limit = normalizedLimit },
                 commandType: CommandType.Text
