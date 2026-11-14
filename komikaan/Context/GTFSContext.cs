@@ -202,22 +202,35 @@ namespace komikaan.Context
                 ? stop.PrimaryStop.ToString()
                 : stopId;
 
-            stop.MergedStops = await GetMergedStopsAsync(dbConnection, primaryStopId, routeType);
+            // The follow-up queries are independent; run them in parallel on separate
+            // connections so page load is the slowest query, not the sum of all of them.
+            var mergedStopsTask = WithConnectionAsync(connection => GetMergedStopsAsync(connection, primaryStopId, routeType));
+            var departuresTask = WithConnectionAsync(connection => GetDeparturesAsync(connection, primaryStopId, routeType));
+            var relatedStopsTask = WithConnectionAsync(connection => GetRelatedStopsAsync(connection, primaryStopId, routeType));
+            var routesTask = WithConnectionAsync(connection => GetStopRoutesAsync(connection, primaryStopId, routeType));
+
+            stop.MergedStops = await mergedStopsTask;
             _logger.LogInformation("Retrieved merged stops {time}", stopwatch.Elapsed);
 
-            stop.Departures = await GetDeparturesAsync(dbConnection, primaryStopId, routeType);
+            stop.Departures = await departuresTask;
             _logger.LogInformation("Retrieved departures {time}", stopwatch.Elapsed);
 
-            stop.RelatedStops = await GetRelatedStopsAsync(dbConnection, primaryStopId, routeType);
+            stop.RelatedStops = await relatedStopsTask;
             _logger.LogInformation("Retrieved related stops {time}", stopwatch.Elapsed);
 
-            stop.Routes = await GetStopRoutesAsync(dbConnection, primaryStopId, routeType);
+            stop.Routes = await routesTask;
             _logger.LogInformation("Retrieved routes {time}", stopwatch.Elapsed);
 
             stop.RelatedStops = FilterRelatedStops(stop.RelatedStops);
             _logger.LogInformation("Fixed stops {time}", stopwatch.Elapsed);
 
             return stop;
+        }
+
+        private async Task<T> WithConnectionAsync<T>(Func<NpgsqlConnection, Task<T>> query)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await query(connection);
         }
 
 
@@ -257,40 +270,58 @@ namespace komikaan.Context
             // Large stations have many related platform stops, and feeds can contain the same
             // physical departure as several trips: one per platform, or once per overlapping
             // service pattern with slightly different times. Cluster rows by displayed identity
-            // (origin + route + trip number, or origin + route + destination when there is no
-            // trip number) within a five-minute chain and keep one row per cluster, preferring
-            // the row that carries realtime data. Result is re-sorted by departure time.
-            return DeduplicateDepartures(rows)
+            // (origin + route + trip number, or origin + route + destination for bus stops,
+            // whose trips have no number) within a five-minute chain and keep one row per
+            // cluster, preferring the row that carries realtime data. Result is re-sorted by
+            // departure time.
+            return DeduplicateDepartures(rows, routeType)
                 .OrderBy(DepartureTimeOf);
         }
 
-        private static IEnumerable<GTFSStopTime> DeduplicateDepartures(IEnumerable<GTFSStopTime> rows)
+        private static IEnumerable<GTFSStopTime> DeduplicateDepartures(IEnumerable<GTFSStopTime> rows, ExtendedRouteType routeType)
         {
             return rows
                 .GroupBy(departure => (
                     departure.DataOrigin,
                     departure.RouteShortName,
-                    ClusterKeyOf(departure)))
+                    ClusterKeyOf(departure, routeType)))
                 .SelectMany(group => ClusterByDepartureTime(group).Select(PickPreferredRow));
         }
 
-        private static string ClusterKeyOf(GTFSStopTime departure)
+        private static string ClusterKeyOf(GTFSStopTime departure, ExtendedRouteType routeType)
         {
-            // Train numbers are unique per day; bus/tram trips have no number, so cluster those
-            // by destination instead (same line + destination within minutes = same departure).
-            return string.IsNullOrEmpty(departure.Shortname)
-                ? "dest:" + departure.Headsign
-                : "nr:" + departure.Shortname;
+            // Train numbers are unique per day. Bus trips have no number, so cluster those by
+            // destination instead (same line + destination within minutes = same departure).
+            // Other unnumbered modes (metro/tram run every 2-3 minutes legitimately) fall back
+            // to the exact departure time.
+            if (!string.IsNullOrEmpty(departure.Shortname))
+            {
+                return "nr:" + departure.Shortname;
+            }
+
+            var typeValue = (int)routeType;
+            if (typeValue == 3 || (typeValue >= 700 && typeValue <= 716))
+            {
+                return "dest:" + departure.Headsign;
+            }
+
+            return "t:" + DepartureTimeOf(departure);
         }
 
         private static IEnumerable<IEnumerable<GTFSStopTime>> ClusterByDepartureTime(IEnumerable<GTFSStopTime> rows)
         {
+            var maxGap = TimeSpan.FromMinutes(5);
             var clusters = new List<List<GTFSStopTime>>();
             foreach (var row in rows.OrderBy(DepartureTimeOf))
             {
                 var rowTime = DepartureTimeOf(row);
                 var previousTime = clusters.Count > 0 ? DepartureTimeOf(clusters[^1][^1]) : null;
-                if (previousTime is not null && rowTime is not null && (rowTime.Value - previousTime.Value).TotalMinutes <= 5)
+                // Numbered rows merge within five minutes inclusive; unnumbered rows only
+                // below five minutes, so a legitimate exact-five-minute headway is kept.
+                var withinGap = string.IsNullOrEmpty(row.Shortname)
+                    ? previousTime is not null && rowTime is not null && rowTime.Value - previousTime.Value < maxGap
+                    : previousTime is not null && rowTime is not null && rowTime.Value - previousTime.Value <= maxGap;
+                if (withinGap)
                 {
                     clusters[^1].Add(row);
                 }
