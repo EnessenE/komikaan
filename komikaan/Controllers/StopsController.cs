@@ -35,9 +35,14 @@ namespace komikaan.Controllers
 
 
         [HttpGet("{stopId}/{stopType}")]
-        public async Task<ActionResult<GTFSStopData>> GetDeparturesAsync(string stopId, ExtendedRouteType stopType)
+        public async Task<ActionResult<GTFSStopData>> GetDeparturesAsync(string stopId, string stopType)
         {
-            var result = await _dataSupplier.GetStopAsync(stopId, stopType);
+            if (!TryParseStopType(stopType, out var parsedStopType))
+            {
+                return UnprocessableEntity($"Invalid stop type '{stopType}'. Use an ExtendedRouteType name (e.g. RailwayService, BusService) or a numeric route type.");
+            }
+
+            var result = await _dataSupplier.GetStopAsync(stopId, parsedStopType);
 
             if (result == null)
             {
@@ -49,11 +54,39 @@ namespace komikaan.Controllers
 
 
         [HttpGet("{stopId}/{stopType}/alerts")]
-        public async Task<ActionResult<IEnumerable<GTFSAlert>>> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType)
+        public async Task<ActionResult<IEnumerable<GTFSAlert>>> GetAlertsAsync(Guid stopId, string stopType)
         {
-            var result = await _dataSupplier.GetAlertsForStopAsync(stopId, stopType);
+            if (!TryParseStopType(stopType, out var parsedStopType))
+            {
+                return UnprocessableEntity($"Invalid stop type '{stopType}'. Use an ExtendedRouteType name (e.g. RailwayService, BusService) or a numeric route type.");
+            }
+
+            var result = await _dataSupplier.GetAlertsForStopAsync(stopId, parsedStopType);
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// The database stores both standard GTFS route types (0-12, e.g. 1 = station/subway)
+        /// and extended route types (100+, e.g. RailwayService) in stops.stop_type.
+        /// ExtendedRouteType only defines the 100+ values, so a plain enum parameter would
+        /// reject the low numeric values with a 400. Accept both enum names and any integer.
+        /// </summary>
+        private static bool TryParseStopType(string? stopType, out ExtendedRouteType result)
+        {
+            result = default;
+            if (string.IsNullOrWhiteSpace(stopType))
+            {
+                return false;
+            }
+
+            if (int.TryParse(stopType, out var numeric))
+            {
+                result = (ExtendedRouteType)numeric;
+                return true;
+            }
+
+            return Enum.TryParse(stopType, ignoreCase: true, out result) && Enum.IsDefined(result);
         }
 
 
