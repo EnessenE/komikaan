@@ -259,7 +259,7 @@ namespace komikaan.Context
             // displayed identity (origin + route + train number + headsign + time), preferring
             // the row that carries realtime data.
             return rows
-                .GroupBy(departure => (departure.DataOrigin, departure.RouteShortName, departure.Shortname, departure.Headsign, departure.PlannedDepartureTime ?? departure.DepartureTime ?? departure.ArrivalTime))
+                .GroupBy(departure => (departure.DataOrigin, departure.RouteShortName, departure.Shortname, departure.PlannedDepartureTime ?? departure.DepartureTime ?? departure.ArrivalTime))
                 .Select(group => group
                     .OrderByDescending(row => row.RealTime == true)
                     .ThenBy(row => row.PlannedPlatform, StringComparer.Ordinal)
