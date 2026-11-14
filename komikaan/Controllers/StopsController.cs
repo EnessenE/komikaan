@@ -24,37 +24,20 @@ namespace komikaan.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("search")]
-        public async Task<IEnumerable<GTFSSearchStop>> SearchStopsAsync(string filter, CancellationToken token)
+        public async Task<ActionResult<IEnumerable<GTFSSearchStop>>> SearchStopsAsync([FromQuery] string? filter, CancellationToken token)
         {
-            _logger.LogInformation("Searching for {name}", filter);
-            var stops = await _dataSupplier.FindAsync(filter, token);
+            var searchText = string.IsNullOrWhiteSpace(filter) ? "Amsterdam" : filter;
+            _logger.LogInformation("Searching for {name}", searchText);
+            var stops = await _dataSupplier.FindAsync(searchText, token);
 
-            return stops;
+            return Ok(stops);
         }
 
 
         [HttpGet("{stopId}/{stopType}")]
         public async Task<ActionResult<GTFSStopData>> GetDeparturesAsync(string stopId, ExtendedRouteType stopType)
         {
-            if (!string.IsNullOrWhiteSpace(stopId))
-            {
-                var result = await _dataSupplier.GetStopAsync(stopId, stopType);
-
-                if (result == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(result);
-            }
-            return UnprocessableEntity("Provide a valid stop id");
-        }
-
-
-        [HttpGet("{stopId}/{stopType}/alerts")]
-        public async Task<ActionResult<GTFSStopData>> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType)
-        {
-            var result = await _dataSupplier.GetAlertsForStopAsync(stopId, stopType);
+            var result = await _dataSupplier.GetStopAsync(stopId, stopType);
 
             if (result == null)
             {
@@ -65,21 +48,26 @@ namespace komikaan.Controllers
         }
 
 
+        [HttpGet("{stopId}/{stopType}/alerts")]
+        public async Task<ActionResult<IEnumerable<GTFSAlert>>> GetAlertsAsync(Guid stopId, ExtendedRouteType stopType)
+        {
+            var result = await _dataSupplier.GetAlertsForStopAsync(stopId, stopType);
+
+            return Ok(result);
+        }
+
+
         [HttpGet("exact/{dataOrigin}/{stopId}")]
         public async Task<ActionResult<GTFSStopData>> GetDeparturesForSpecificStopAsync(string dataOrigin, string stopId)
         {
-            if (!string.IsNullOrWhiteSpace(stopId))
+            var result = await _dataSupplier.GetStopAsync(dataOrigin, stopId);
+
+            if (result == null)
             {
-                var result = await _dataSupplier.GetStopAsync(dataOrigin, stopId);
-
-                if (result == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(result);
+                return NotFound();
             }
-            return UnprocessableEntity("Provide a valid stop id");
+
+            return Ok(result);
         }
 
         /// <summary>
@@ -89,12 +77,14 @@ namespace komikaan.Controllers
         /// <param name="latitude">Latitude coordinate</param>
         /// <returns></returns>
         [HttpGet("nearby")]
-        public async Task<NearbyUserData> NearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
+        public async Task<ActionResult<NearbyUserData>> NearbyStopsAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
-            var data = new NearbyUserData();
-            data.Stops = await _dataSupplier.GetNearbyStopsAsync(longitude, latitude, cancellationToken);
-            data.Vehicles = await _dataSupplier.GetNearbyVehiclesAsync(longitude, latitude, cancellationToken);
-            return data;
+            var data = new NearbyUserData
+            {
+                Stops = await _dataSupplier.GetNearbyStopsAsync(longitude, latitude, cancellationToken),
+                Vehicles = await _dataSupplier.GetNearbyVehiclesAsync(longitude, latitude, cancellationToken)
+            };
+            return Ok(data);
         }
 
         [HttpGet("train-stations")]

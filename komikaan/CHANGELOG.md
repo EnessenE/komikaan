@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.24.0] - 14-11-2026
+### Fixed
+- `GET /v1/stops/{stopId}/{stopType}` returned a 500 for non-uuid stop ids; it now returns 404 (the id must be a primary-stop uuid, as the database functions require)
+- `GET /v1/stops/train-stations` crashed parsing `stop_type` (`'Train'` text vs `int`); now uses the bounds variant of the database function with world-wide bounds
+- Trip endpoint now maps `target_stop` to `TargetStopName` and `pick_up`/`drop_off` to `PickupType`/`DropOffType` of trip stops
+- `GET /v1/feeds/{dataOrigin}/shapes` now returns populated `shapeId`/`shapePtLat`/`shapePtLon` instead of empty values
+- `KomIkaanVehiclePosition.MeasurementTime` is now nullable, matching the nullable database column
+- Removed `Feed.LastFailure` (no matching column in `get_all_feeds()`)
+
+### Changed
+- GTFS data classes moved from the `komikaan.Context` namespace to `komikaan.Data.GTFS`
+- `GTFSContext` now uses a pooled `NpgsqlDataSource` instead of a new connection per query, and registers Dapper type handlers only once
+- Removed unused code: `TripTimeInfo`, `PaginatedResponse`, `HttpLoggingHandler`, disruption/leg enums
+- `DataService` reload interval is configurable via `DataService:ReloadIntervalMinutes`
+- Controllers consistently return `ActionResult` with proper 404/422 responses; map endpoints validate viewport bounds and coordinates
+
 [2.23.0] - 14-11-2026
 ### Changed
 - Update to .NET 10 SDK 10.0.400 and bump all NuGet dependencies to their latest versions

@@ -16,8 +16,9 @@ namespace komikaan.Services
         {
             _dataSuppliers = dataSuppliers;
             _logger = logger;
-            _periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(3));
             _settings = settings.Value;
+            var interval = TimeSpan.FromMinutes(Math.Max(1, _settings.ReloadIntervalMinutes));
+            _periodicTimer = new PeriodicTimer(interval);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

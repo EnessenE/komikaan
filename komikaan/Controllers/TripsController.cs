@@ -1,5 +1,4 @@
-﻿using komikaan.Context;
-using komikaan.Data.GTFS;
+﻿using komikaan.Data.GTFS;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,12 +18,15 @@ namespace komikaan.Controllers
         }
 
 
-        [HttpGet("{tripid}/")]
-        public async Task<GTFSTrip?> GetTripAsync(Guid tripId, DateTimeOffset? date)
+        [HttpGet("{tripid}")]
+        public async Task<ActionResult<GTFSTrip>> GetTripAsync(Guid tripId)
         {
-            var setDate = date ?? DateTimeOffset.UtcNow;
-            var trip = await _gtfs.GetTripAsync(tripId, setDate);
-            return trip;
+            var trip = await _gtfs.GetTripAsync(tripId, DateTimeOffset.UtcNow);
+            if (trip == null)
+            {
+                return NotFound();
+            }
+            return Ok(trip);
         }
     }
 }
