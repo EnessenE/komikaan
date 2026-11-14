@@ -21,6 +21,14 @@ namespace komikaan.Controllers
         [HttpGet("viewport")]
         public async Task<ActionResult<MapViewportData>> GetViewportDataAsync([FromQuery] MapViewportQuery query)
         {
+            if (double.IsNaN(query.MinLatitude) || double.IsNaN(query.MaxLatitude) ||
+                double.IsNaN(query.MinLongitude) || double.IsNaN(query.MaxLongitude) ||
+                double.IsInfinity(query.MinLatitude) || double.IsInfinity(query.MaxLatitude) ||
+                double.IsInfinity(query.MinLongitude) || double.IsInfinity(query.MaxLongitude))
+            {
+                return UnprocessableEntity("Viewport bounds must be finite numbers.");
+            }
+
             if (query.MinLatitude > query.MaxLatitude || query.MinLongitude > query.MaxLongitude)
             {
                 return UnprocessableEntity("Viewport bounds are invalid.");
@@ -59,6 +67,11 @@ namespace komikaan.Controllers
             [FromQuery] double longitude,
             [FromQuery] double bboxDegrees = 0.01)
         {
+            if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180)
+            {
+                return UnprocessableEntity("Provide valid latitude (-90..90) and longitude (-180..180).");
+            }
+
             var clampedBbox = Math.Clamp(bboxDegrees, 0.001, 0.5);
             var routes = await _gtfs.GetRoutesNearPointAsync(latitude, longitude, clampedBbox);
             return Ok(routes);

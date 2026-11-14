@@ -23,24 +23,28 @@ namespace komikaan.Context
     {
         private readonly ILogger<GTFSContext> _logger;
 
-        private readonly string _connectionString;
         private readonly NpgsqlDataSource _dataSource;
         private List<Feed> _allFeeds;
         private List<CoverageDataPoint> _coveragePoints;
 
+        private static bool _typeHandlersRegistered;
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "This entire class needs a refactor")]
         public GTFSContext(ILogger<GTFSContext> logger, IConfiguration configuration)
         {
-            SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
-            SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler());
-            SqlMapper.AddTypeHandler(new DoubleArrayHandler());
-
-            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+            if (!_typeHandlersRegistered)
+            {
+                SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
+                SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler());
+                SqlMapper.AddTypeHandler(new DoubleArrayHandler());
+                Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+                _typeHandlersRegistered = true;
+            }
 
             _logger = logger;
-            _connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
+            var connectionString = configuration.GetConnectionString("gtfs") ?? throw new InvalidOperationException("A GTFS postgres database connection should be defined!");
 
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             _dataSource = dataSourceBuilder.Build();
         }
 
@@ -61,7 +65,7 @@ namespace komikaan.Context
 
         public async Task<IEnumerable<GTFSSearchStop>> FindAsync(string text, CancellationToken cancellationToken)
         {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            await using var dbConnection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
             var foundStops = await dbConnection.QueryAsync<GTFSSearchStop>(
                 @"select * from search_stop(@search)",
@@ -89,11 +93,11 @@ namespace komikaan.Context
 
         public async Task<GTFSTrip?> GetTripAsync(Guid tripId, DateTimeOffset date)
         {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            await using var dbConnection = await _dataSource.OpenConnectionAsync();
             //TODO: Take in account the relative timezone for us + user
 
             var trip = await dbConnection.QueryFirstOrDefaultAsync<GTFSTrip>(
-            @"select * from get_trip_from_id(@tripid) LIMIT 1",
+            @"select *, target_stop as target_stop_name from get_trip_from_id(@tripid) LIMIT 1",
                 new
                 {
                     tripid = tripId
@@ -104,10 +108,11 @@ namespace komikaan.Context
             if (trip != null)
             {
                 var foundStops = await dbConnection.QueryAsync<GTFSTripStop>(
-                @"select * from get_stop_times_for_trip(@tripid)",
+                @"select *, pick_up as pickup_type, drop_off as drop_off_type from get_stop_times_for_trip(@tripid, @target_date)",
                     new
                     {
-                        tripid = tripId
+                        tripid = tripId,
+                        target_date = DateOnly.FromDateTime(date.DateTime)
                     },
                     commandType: CommandType.Text
                 );
@@ -129,7 +134,7 @@ namespace komikaan.Context
 
         public async Task<GTFSStopData?> GetStopAsync(string dataOrigin, string stopId)
         {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            await using var dbConnection = await _dataSource.OpenConnectionAsync();
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -169,14 +174,21 @@ namespace komikaan.Context
 
         public async Task<GTFSStopData?> GetStopAsync(string stopId, ExtendedRouteType routeType)
         {
-            using var dbConnection = new Npgsql.NpgsqlConnection(_connectionString);
+            // get_stop_from_id looks up related_stops.primary_stop, so the id must be a uuid
+            if (!Guid.TryParse(stopId, out var stopGuid))
+            {
+                _logger.LogWarning("GetStopAsync called with non-uuid stop id {stopId}", stopId);
+                return null;
+            }
+
+            await using var dbConnection = await _dataSource.OpenConnectionAsync();
             var stopwatch = Stopwatch.StartNew();
 
             var stop = await dbConnection.QueryFirstOrDefaultAsync<GTFSStopData>(
                 @"select * from get_stop_from_id(@stopid, @stop_type) LIMIT 1",
                 new
                 {
-                    stopid = stopId,
+                    stopid = stopGuid,
                     stop_type = routeType
                 },
                 commandType: CommandType.Text
@@ -185,18 +197,21 @@ namespace komikaan.Context
 
             if (stop == null)
                 return null;
-            stop.PrimaryStop = Guid.Parse(stopId);
 
-            stop.MergedStops = await GetMergedStopsAsync(dbConnection, stopId, routeType);
+            var primaryStopId = stop.PrimaryStop != Guid.Empty
+                ? stop.PrimaryStop.ToString()
+                : stopId;
+
+            stop.MergedStops = await GetMergedStopsAsync(dbConnection, primaryStopId, routeType);
             _logger.LogInformation("Retrieved merged stops {time}", stopwatch.Elapsed);
 
-            stop.Departures = await GetDeparturesAsync(dbConnection, stopId, routeType);
+            stop.Departures = await GetDeparturesAsync(dbConnection, primaryStopId, routeType);
             _logger.LogInformation("Retrieved departures {time}", stopwatch.Elapsed);
 
-            stop.RelatedStops = await GetRelatedStopsAsync(dbConnection, stopId, routeType);
+            stop.RelatedStops = await GetRelatedStopsAsync(dbConnection, primaryStopId, routeType);
             _logger.LogInformation("Retrieved related stops {time}", stopwatch.Elapsed);
 
-            stop.Routes = await GetStopRoutesAsync(dbConnection, stopId, routeType);
+            stop.Routes = await GetStopRoutesAsync(dbConnection, primaryStopId, routeType);
             _logger.LogInformation("Retrieved routes {time}", stopwatch.Elapsed);
 
             stop.RelatedStops = FilterRelatedStops(stop.RelatedStops);
@@ -347,19 +362,11 @@ namespace komikaan.Context
         public async Task<IEnumerable<GTFSRoute>?> GetDataOriginRoutesAsync(string dataOrigin)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
-            var data = await connection.QueryAsync<GTFSRoute>(
+            return await connection.QueryAsync<GTFSRoute>(
             @"select * from get_routes_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
                 commandType: CommandType.Text
             );
-            var items = new List<GTFSRoute>();
-            foreach (var item in data)
-            {
-                var route = (GTFSRoute)item;
-                items.Add(route);
-            }
-
-            return items;
         }
 
         public async Task<GTFSRouteDetails?> GetRouteAsync(string dataOrigin, string routeId)
@@ -393,7 +400,7 @@ namespace komikaan.Context
                 @"select * from get_service_date_range_from_route(@dataorigin, @routeid) LIMIT 1",
                 new { dataorigin = dataOrigin, routeid = routeId },
                 commandType: CommandType.Text
-            );
+            ).ConfigureAwait(true);
 
             route.Shapes = shapes;
             route.Stops = stops;
@@ -436,7 +443,7 @@ namespace komikaan.Context
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
             var data = await connection.QueryAsync<Shape>(
-            @"select * from get_shapes_from_data_origin(@dataorigin)",
+            @"select id as shape_id, latitude as shape_pt_lat, longitude as shape_pt_lon from get_shapes_from_data_origin(@dataorigin)",
                 new { dataorigin = dataOrigin },
                 commandType: CommandType.Text
             );
@@ -464,8 +471,12 @@ namespace komikaan.Context
         public async Task<IEnumerable<TrainStationPerformance>> GetTrainStationPerformanceAsync()
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
+            // get_train_station_performance() returns stop_type as the text 'Train', which does not
+            // map to the int property; the in-bounds variant returns the real integer stop_type.
+            // Use it with world-wide bounds so all stations are returned.
             return await connection.QueryAsync<TrainStationPerformance>(
-                @"SELECT * FROM public.get_train_station_performance()",
+                @"SELECT * FROM public.get_train_station_performance_in_bounds(-90, 90, -180, 180, @limit)",
+                new { limit = 100000 },
                 commandType: CommandType.Text
             );
         }
@@ -501,9 +512,8 @@ namespace komikaan.Context
             var shapesTask = FetchShapesAsync(query, normalizedShapeLimit, normalizedZoom);
             var stopsTask = FetchStopsAsync(query, normalizedStopLimit);
 
-            await Task.WhenAll(shapesTask, stopsTask);
-
-            var stops = stopsTask.Result.ToList();
+            var shapes = await shapesTask;
+            var stops = (await stopsTask).ToList();
             foreach (var stop in stops)
             {
                 FixCoordinates(stop);
@@ -511,7 +521,7 @@ namespace komikaan.Context
 
             return new MapViewportData
             {
-                Shapes = shapesTask.Result,
+                Shapes = shapes,
                 Stops = stops
             };
         }
@@ -618,7 +628,6 @@ namespace komikaan.Context
             return alerts;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "AV1551:Method overload should call another overload", Justification = "<Pending>")]
         public async Task<IEnumerable<GTFSAlert>?> GetAlertsForStopAsync(Guid stopId, ExtendedRouteType stopType)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
@@ -652,7 +661,7 @@ namespace komikaan.Context
             return delayedStops;
         }
 
-        public IEnumerable<CoverageDataPoint> GetCoverage()
+        public IEnumerable<CoverageDataPoint>? GetCoverage()
         {
             return _coveragePoints;
         }

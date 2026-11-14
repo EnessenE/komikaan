@@ -1,5 +1,4 @@
-﻿using komikaan.Context;
-using komikaan.Data.API;
+﻿using komikaan.Data.API;
 using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.GTFS.Models.Static.Enums;
@@ -36,5 +35,5 @@ public interface IGTFSContext
     Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin, int limit, int offset);
     Task<IEnumerable<GTFSAlert>?> GetAlertsForStopAsync(Guid stopId, ExtendedRouteType stopType);
     Task<IEnumerable<TopDelayedStop>> GetTopDelayedStopsAsync(int limit, string? dataOrigin);
-    IEnumerable<CoverageDataPoint> GetCoverage();
+    IEnumerable<CoverageDataPoint>? GetCoverage();
 }

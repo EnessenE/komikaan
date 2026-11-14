@@ -1,5 +1,4 @@
-﻿using komikaan.Context;
-using komikaan.GTFS.Models.Static.Models;
+﻿using komikaan.GTFS.Models.Static.Models;
 
 namespace komikaan.Data.GTFS
 {

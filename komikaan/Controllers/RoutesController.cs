@@ -45,7 +45,7 @@ namespace komikaan.Controllers
             if (string.IsNullOrWhiteSpace(dataOrigin) || string.IsNullOrWhiteSpace(routeId))
                 return UnprocessableEntity("Provide a valid data origin and route id");
 
-            var rows = await _gtfs.GetTimetableAsync(dataOrigin, routeId, date);
+            var rows = await _gtfs.GetTimetableAsync(dataOrigin, routeId, date ?? DateOnly.FromDateTime(DateTime.Today));
             var list = rows.ToList();
             if (!list.Any()) return NotFound();
             return Ok(list);

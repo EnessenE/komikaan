@@ -1,4 +1,4 @@
-﻿namespace komikaan.Context
+﻿namespace komikaan.Data.GTFS
 {
     public class KomikaanShape
     {

@@ -1,5 +1,3 @@
-using komikaan.Context;
-
 namespace komikaan.Data.GTFS
 {
     public class GTFSRouteDetails : GTFSRoute

@@ -23,8 +23,6 @@ internal class Program
 
         var corsName = "sources";
 
-        builder.Configuration.AddEnvironmentVariables();
-
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .CreateLogger();
@@ -74,8 +72,6 @@ internal class Program
     {
         var tracingOtlpEndpoint = builder.Configuration.GetValue<string>("OTLP_ENDPOINT_URL");
 
-        var greeterActivitySource = new ActivitySource(meter.Name);
-
         var otel = services.AddOpenTelemetry();
 
         // Configure OpenTelemetry Resources with the application name
@@ -97,7 +93,7 @@ internal class Program
         {
             tracing.AddAspNetCoreInstrumentation();
             tracing.AddHttpClientInstrumentation();
-            tracing.AddSource(greeterActivitySource.Name);
+            tracing.AddSource(komikaan.Telemetry.Activity.Name);
             if (tracingOtlpEndpoint != null)
             {
                 tracing.AddOtlpExporter(otlpOptions =>
@@ -133,7 +129,6 @@ internal class Program
 
         app.UseHttpsRedirection();
 
-        app.UseAuthorization();
         app.UseSerilogRequestLogging();
         app.MapControllers();
 

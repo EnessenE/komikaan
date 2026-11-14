@@ -1,4 +1,4 @@
-﻿namespace komikaan.Data.Models
+﻿namespace komikaan.Data.GTFS
 {
     public class GTFSAlert
     {
