@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.24.2] - 14-11-2026
+### Fixed
+- Departures at multi-platform stations no longer show the same train twice/thrice: rows carrying a trip number are now clustered by train number within a five-minute chain (the OpenOV feed repeats one physical train per overlapping service pattern with slightly different times/platforms), preferring the row with realtime data; rows without a trip number keep exact-time deduplication. Verified against the NS reisinformatie API at Amsterdam Centraal
+
 [2.24.1] - 14-11-2026
 ### Fixed
 - `GET /v1/stops/{stopId}/{stopType}` (and its `/alerts` variant) now accept numeric stop types 0-12 (e.g. `/stops/<uuid>/1`) in addition to `ExtendedRouteType` names like `RailwayService`/`BusService`; previously these returned `400 The value '1' is invalid`. Unparseable values now return `422` with a clear message

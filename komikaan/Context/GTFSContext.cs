@@ -255,15 +255,57 @@ namespace komikaan.Context
             );
 
             // Large stations have many related platform stops, and feeds can contain the same
-            // physical departure as several trips (one per platform). Deduplicate on the
-            // displayed identity (origin + route + train number + headsign + time), preferring
-            // the row that carries realtime data.
+            // physical departure as several trips: one per platform, or once per overlapping
+            // service pattern with slightly different times. Rows carrying a trip number
+            // (Shortname) are clustered by number within a five-minute chain (train numbers
+            // are unique per day); rows without a number fall back to exact-time deduplication.
+            // Prefer the row that carries realtime data.
+            return DeduplicateDepartures(rows);
+        }
+
+        private static IEnumerable<GTFSStopTime> DeduplicateDepartures(IEnumerable<GTFSStopTime> rows)
+        {
             return rows
-                .GroupBy(departure => (departure.DataOrigin, departure.RouteShortName, departure.Shortname, departure.PlannedDepartureTime ?? departure.DepartureTime ?? departure.ArrivalTime))
-                .Select(group => group
-                    .OrderByDescending(row => row.RealTime == true)
-                    .ThenBy(row => row.PlannedPlatform, StringComparer.Ordinal)
-                    .First());
+                .GroupBy(departure => (departure.DataOrigin, departure.RouteShortName, departure.Shortname))
+                .SelectMany(group => string.IsNullOrEmpty(group.Key.Shortname)
+                    ? group
+                        .GroupBy(DepartureTimeOf)
+                        .Select(timeGroup => PickPreferredRow(timeGroup))
+                    : ClusterByDepartureTime(group).Select(PickPreferredRow));
+        }
+
+        private static IEnumerable<IEnumerable<GTFSStopTime>> ClusterByDepartureTime(IEnumerable<GTFSStopTime> rows)
+        {
+            var clusters = new List<List<GTFSStopTime>>();
+            foreach (var row in rows.OrderBy(DepartureTimeOf))
+            {
+                var rowTime = DepartureTimeOf(row);
+                var previousTime = clusters.Count > 0 ? DepartureTimeOf(clusters[^1][^1]) : null;
+                if (previousTime is not null && rowTime is not null && (rowTime.Value - previousTime.Value).TotalMinutes <= 5)
+                {
+                    clusters[^1].Add(row);
+                }
+                else
+                {
+                    clusters.Add(new List<GTFSStopTime> { row });
+                }
+            }
+
+            return clusters;
+        }
+
+        private static GTFSStopTime PickPreferredRow(IEnumerable<GTFSStopTime> rows)
+        {
+            return rows
+                .OrderByDescending(row => row.RealTime == true)
+                .ThenBy(DepartureTimeOf)
+                .ThenBy(row => row.PlannedPlatform, StringComparer.Ordinal)
+                .First();
+        }
+
+        private static DateTimeOffset? DepartureTimeOf(GTFSStopTime departure)
+        {
+            return departure.PlannedDepartureTime ?? departure.DepartureTime ?? departure.ArrivalTime;
         }
 
         private async Task<IEnumerable<GTFSStopData>> GetRelatedStopsAsync(
