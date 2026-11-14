@@ -256,22 +256,31 @@ namespace komikaan.Context
 
             // Large stations have many related platform stops, and feeds can contain the same
             // physical departure as several trips: one per platform, or once per overlapping
-            // service pattern with slightly different times. Rows carrying a trip number
-            // (Shortname) are clustered by number within a five-minute chain (train numbers
-            // are unique per day); rows without a number fall back to exact-time deduplication.
-            // Prefer the row that carries realtime data.
-            return DeduplicateDepartures(rows);
+            // service pattern with slightly different times. Cluster rows by displayed identity
+            // (origin + route + trip number, or origin + route + destination when there is no
+            // trip number) within a five-minute chain and keep one row per cluster, preferring
+            // the row that carries realtime data. Result is re-sorted by departure time.
+            return DeduplicateDepartures(rows)
+                .OrderBy(DepartureTimeOf);
         }
 
         private static IEnumerable<GTFSStopTime> DeduplicateDepartures(IEnumerable<GTFSStopTime> rows)
         {
             return rows
-                .GroupBy(departure => (departure.DataOrigin, departure.RouteShortName, departure.Shortname))
-                .SelectMany(group => string.IsNullOrEmpty(group.Key.Shortname)
-                    ? group
-                        .GroupBy(DepartureTimeOf)
-                        .Select(timeGroup => PickPreferredRow(timeGroup))
-                    : ClusterByDepartureTime(group).Select(PickPreferredRow));
+                .GroupBy(departure => (
+                    departure.DataOrigin,
+                    departure.RouteShortName,
+                    ClusterKeyOf(departure)))
+                .SelectMany(group => ClusterByDepartureTime(group).Select(PickPreferredRow));
+        }
+
+        private static string ClusterKeyOf(GTFSStopTime departure)
+        {
+            // Train numbers are unique per day; bus/tram trips have no number, so cluster those
+            // by destination instead (same line + destination within minutes = same departure).
+            return string.IsNullOrEmpty(departure.Shortname)
+                ? "dest:" + departure.Headsign
+                : "nr:" + departure.Shortname;
         }
 
         private static IEnumerable<IEnumerable<GTFSStopTime>> ClusterByDepartureTime(IEnumerable<GTFSStopTime> rows)

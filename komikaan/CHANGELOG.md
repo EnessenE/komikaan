@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [2.24.2] - 14-11-2026
 ### Fixed
-- Departures at multi-platform stations no longer show the same train twice/thrice: rows carrying a trip number are now clustered by train number within a five-minute chain (the OpenOV feed repeats one physical train per overlapping service pattern with slightly different times/platforms), preferring the row with realtime data; rows without a trip number keep exact-time deduplication. Verified against the NS reisinformatie API at Amsterdam Centraal
+- Departures no longer show the same physical departure twice/thrice and are returned time-ordered again: rows are clustered within a five-minute chain by displayed identity (train number when present, otherwise line + destination) because the OpenOV feed repeats one physical departure per overlapping service pattern with slightly different times/platforms (e.g. IC 1577 at Amsterdam Centraal on 2026-11-15 at 20:59 on 15b and 21:00 on 10b; bus 42 at Prins Hendrikkade twice 39s apart; bus 314 twice 4 min apart); the row with realtime data is preferred. Verified against the NS reisinformatie API at Amsterdam Centraal
 
 [2.24.1] - 14-11-2026
 ### Fixed
