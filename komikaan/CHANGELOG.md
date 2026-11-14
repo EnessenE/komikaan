@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.23.0] - 14-11-2026
+### Changed
+- Update to .NET 10 SDK 10.0.400 and bump all NuGet dependencies to their latest versions
+
 [2.22.0] - 23-08-2026
 ### Changed
 - Bump dependencies
