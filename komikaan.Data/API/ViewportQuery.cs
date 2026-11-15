@@ -22,4 +22,15 @@ namespace komikaan.Data.API
         public int StopLimit { get; set; } = 5000;
         public bool FullShapes { get; set; } = false;
     }
+
+    public class FeedViewportQuery
+    {
+        public double? MinLatitude { get; set; }
+        public double? MaxLatitude { get; set; }
+        public double? MinLongitude { get; set; }
+        public double? MaxLongitude { get; set; }
+        public int Limit { get; set; } = 8000;
+
+        public bool HasBounds => MinLatitude != null && MaxLatitude != null && MinLongitude != null && MaxLongitude != null;
+    }
 }

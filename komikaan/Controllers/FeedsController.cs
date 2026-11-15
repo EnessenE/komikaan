@@ -1,3 +1,4 @@
+using komikaan.Data.API;
 ﻿using komikaan.Data.GTFS;
 using komikaan.Data.Models;
 using komikaan.GTFS.Models.Static.Models;
@@ -66,9 +67,11 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{dataOrigin}/stops")]
-        public async Task<ActionResult<IEnumerable<GTFSSearchStop>>> GetStopsAsync(string dataOrigin)
+        public async Task<ActionResult<IEnumerable<GTFSSearchStop>>> GetStopsAsync(string dataOrigin, [FromQuery] FeedViewportQuery query)
         {
-            var stops = await _gtfs.GetStopsAsync(dataOrigin);
+            var stops = query.HasBounds
+                ? await _gtfs.GetStopsInBoundsAsync(dataOrigin, query)
+                : await _gtfs.GetStopsAsync(dataOrigin);
             return Ok(stops ?? Enumerable.Empty<GTFSSearchStop>());
         }
 
@@ -80,9 +83,11 @@ namespace komikaan.Controllers
         }
 
         [HttpGet("{dataOrigin}/positions")]
-        public async Task<ActionResult<IEnumerable<KomIkaanVehiclePosition>>> GetPositionsAsync(string dataOrigin)
+        public async Task<ActionResult<IEnumerable<KomIkaanVehiclePosition>>> GetPositionsAsync(string dataOrigin, [FromQuery] FeedViewportQuery query)
         {
-            var positions = await _gtfs.GetPositionsAsync(dataOrigin);
+            var positions = query.HasBounds
+                ? await _gtfs.GetPositionsInBoundsAsync(dataOrigin, query)
+                : await _gtfs.GetPositionsAsync(dataOrigin);
             return Ok(positions ?? Enumerable.Empty<KomIkaanVehiclePosition>());
         }
 
