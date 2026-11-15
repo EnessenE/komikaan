@@ -13,6 +13,10 @@ namespace komikaan.Data.GTFS
         public string TripId { get; set; } = string.Empty;
         public string TripHeadsign { get; set; } = string.Empty;
         /// <summary>
+        /// GTFS trips.direction (0/1) of the trip, so timetables can be split per direction.
+        /// </summary>
+        public int? DirectionId { get; set; }
+        /// <summary>
         /// Static GTFS departure time at this stop. Null when the stop is
         /// pass-through-only (no recorded departure).
         /// </summary>
