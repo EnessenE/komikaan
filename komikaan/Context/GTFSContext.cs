@@ -198,9 +198,12 @@ namespace komikaan.Context
             if (stop == null)
                 return null;
 
-            var primaryStopId = stop.PrimaryStop != Guid.Empty
-                ? stop.PrimaryStop.ToString()
-                : stopId;
+            // get_stop_from_id does not return a primary_stop column, so the requested
+            // id (the related_stops.primary_stop uuid) is the primary stop
+            if (stop.PrimaryStop == Guid.Empty)
+                stop.PrimaryStop = stopGuid;
+
+            var primaryStopId = stop.PrimaryStop.ToString();
 
             // The follow-up queries are independent; run them in parallel on separate
             // connections so page load is the slowest query, not the sum of all of them.

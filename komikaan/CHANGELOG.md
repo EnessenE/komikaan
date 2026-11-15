@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `GET /v1/stops/{stopId}/{stopType}` is much faster: the follow-up queries (merged stops, departures, related stops, routes) now run in parallel on separate connections instead of sequentially
 - Bus-stop departures are clustered by line + destination (bus trips have no train number); other unnumbered modes keep exact-time dedup so legitimate 2-3 minute metro/tram headways are preserved
+- `GET /v1/stops/{stopId}/{stopType}` now returns a populated `primaryStop` (the requested uuid); `get_stop_from_id` has no `primary_stop` column, so it previously came back as the zero GUID and the webapp requested alerts for `00000000-0000-0000-0000-000000000000`
 
 - Departures no longer show the same physical departure twice/thrice and are returned time-ordered again: rows are clustered within a five-minute chain by displayed identity (train number when present, otherwise line + destination) because the OpenOV feed repeats one physical departure per overlapping service pattern with slightly different times/platforms (e.g. IC 1577 at Amsterdam Centraal on 2026-11-15 at 20:59 on 15b and 21:00 on 10b; bus 42 at Prins Hendrikkade twice 39s apart; bus 314 twice 4 min apart); the row with realtime data is preferred. Verified against the NS reisinformatie API at Amsterdam Centraal
 
