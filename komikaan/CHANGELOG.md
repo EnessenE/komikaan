@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.24.3] - 15-11-2026
+### Fixed
+- `GET /v1/stops/{stopId}/{stopType}` (and its `/alerts` variant) now convert classic numeric stop types (0-12) to their extended equivalent (e.g. `0` -> `TramService`/900) before querying, so old numeric links keep resolving now that `stops.stop_type` only holds extended values; previously the lookup missed and `stopType` was serialized as a bare number, which crashed the webapp (`stopType.includes is not a function`)
+
 [2.24.2] - 14-11-2026
 ### Fixed
 - `GET /v1/stops/{stopId}/{stopType}` is much faster: the follow-up queries (merged stops, departures, related stops, routes) now run in parallel on separate connections instead of sequentially
