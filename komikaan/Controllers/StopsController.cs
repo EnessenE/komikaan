@@ -1,5 +1,6 @@
 ﻿using komikaan.Data.API;
 using komikaan.Data.GTFS;
+using komikaan.GTFS.Extensions;
 using komikaan.GTFS.Models.Static.Enums;
 using komikaan.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -67,10 +68,11 @@ namespace komikaan.Controllers
         }
 
         /// <summary>
-        /// The database stores both standard GTFS route types (0-12, e.g. 1 = station/subway)
-        /// and extended route types (100+, e.g. RailwayService) in stops.stop_type.
+        /// The database stores extended route types (100+, e.g. RailwayService) in stops.stop_type.
         /// ExtendedRouteType only defines the 100+ values, so a plain enum parameter would
-        /// reject the low numeric values with a 400. Accept both enum names and any integer.
+        /// reject the low numeric values with a 400. Accept both enum names and any integer;
+        /// classic numeric route types (0-12) are converted to their extended equivalent
+        /// (e.g. 0 -> TramService/900) so old links keep working.
         /// </summary>
         private static bool TryParseStopType(string? stopType, out ExtendedRouteType result)
         {
@@ -82,7 +84,9 @@ namespace komikaan.Controllers
 
             if (int.TryParse(stopType, out var numeric))
             {
-                result = (ExtendedRouteType)numeric;
+                result = numeric < 100 && Enum.IsDefined(typeof(RouteType), numeric)
+                    ? ((RouteType)numeric).ToExtendedRouteType()
+                    : (ExtendedRouteType)numeric;
                 return true;
             }
 
@@ -118,19 +122,6 @@ namespace komikaan.Controllers
                 Vehicles = await _dataSupplier.GetNearbyVehiclesAsync(longitude, latitude, cancellationToken)
             };
             return Ok(data);
-        }
-
-        [HttpGet("train-stations")]
-        public async Task<ActionResult<IEnumerable<TrainStationPerformance>>> GetTrainStationsAsync([FromQuery] TrainStationViewportQuery query)
-        {
-            if (query.HasBounds)
-            {
-                var boundedStations = await _dataSupplier.GetTrainStationPerformanceInBoundsAsync(query);
-                return Ok(boundedStations);
-            }
-
-            var stations = await _dataSupplier.GetTrainStationPerformanceAsync();
-            return Ok(stations);
         }
 
         [HttpGet("train-stations")]
