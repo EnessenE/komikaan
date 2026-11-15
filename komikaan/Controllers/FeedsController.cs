@@ -41,6 +41,20 @@ namespace komikaan.Controllers
             return Ok(names);
         }
 
+        [HttpGet("names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetFeedNamesAsync()
+        {
+            var names = await _gtfs.GetFeedNamesAsync();
+            return Ok(names);
+        }
+
+        [HttpGet("realtime-names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetRealtimeFeedNamesAsync()
+        {
+            var names = await _gtfs.GetRealtimeFeedNamesAsync();
+            return Ok(names);
+        }
+
         /// <summary>
         /// Returns the coverage of every feed
         /// </summary>
@@ -79,6 +93,13 @@ namespace komikaan.Controllers
             return Ok(shapes ?? Enumerable.Empty<Shape>());
         }
 
+        [HttpGet("{dataOrigin}/shapes")]
+        public async Task<List<Shape>?> GetShapesAsync(string dataOrigin)
+        {
+            var shapes = await _gtfs.GetShapesAsync(dataOrigin);
+            return shapes?.ToList();
+        }
+
         [HttpGet("{dataOrigin}/positions")]
         public async Task<ActionResult<IEnumerable<KomIkaanVehiclePosition>>> GetPositionsAsync(string dataOrigin)
         {
@@ -93,6 +114,15 @@ namespace komikaan.Controllers
             _logger.LogInformation("Fetching alerts for dataOrigin: {DataOrigin}, limit: {Limit}, offset: {Offset}", dataOrigin, limit, offset);
             var alerts = await _gtfs.GetAlertsAsync(dataOrigin, limit, offset);
             return Ok(alerts ?? Enumerable.Empty<GTFSAlert>());
+        }
+
+        [HttpGet("delays/top")]
+        public async Task<ActionResult<IEnumerable<TopDelayedStop>>> GetTopDelayedStopsAsync([FromQuery] int limit, [FromQuery] string? dataOrigin)
+        {
+            var safeLimit = limit <= 0 ? 25 : limit;
+            _logger.LogInformation("Fetching top delayed stops. limit: {Limit}, dataOrigin: {DataOrigin}", safeLimit, dataOrigin);
+            var topStops = await _gtfs.GetTopDelayedStopsAsync(safeLimit, dataOrigin);
+            return Ok(topStops);
         }
 
         [HttpGet("delays/top")]
