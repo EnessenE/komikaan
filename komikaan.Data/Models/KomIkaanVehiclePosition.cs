@@ -1,4 +1,4 @@
-﻿namespace komikaan.Data.Models
+namespace komikaan.Data.Models
 {
     public class KomIkaanVehiclePosition
     {
@@ -13,5 +13,8 @@
         public string CongestionLevel { get; set; }
         public string OccupancyStatus { get; set; }
         public int? OccupancyPercentage { get; set; } // Nullable integer to match possible nulls
+        public string? VehicleId { get; set; }
+        public string? VehicleLabel { get; set; }
+        public string? VehicleLicensePlate { get; set; }
     }
 }
