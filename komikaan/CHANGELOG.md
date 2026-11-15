@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[2.26.0] - 15-11-2026
+### Added
+- `GET /v1/feeds/{dataOrigin}/stops` and `/positions` accept optional `minLatitude`/`maxLatitude`/`minLongitude`/`maxLongitude`/`limit` query params; when a bbox is given, only entities inside it (hard-capped) are returned via new `get_stops_from_data_origin_in_bounds` / `get_positions_from_data_origin_in_bounds` functions. Without a bbox the endpoints behave as before
+
 [2.25.0] - 15-11-2026
 ### Added
 - Vehicle position responses (`/v1/feeds/{dataOrigin}/positions`, nearby vehicles) now include the GTFS-RT VehicleDescriptor fields: `vehicleId`, `vehicleLabel`, `vehicleLicensePlate` (null when the feed does not report them)

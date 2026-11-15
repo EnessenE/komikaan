@@ -26,12 +26,14 @@ public interface IGTFSContext
     Task<IEnumerable<DatabaseAgency>?> GetAgenciesAsync(string dataOrigin);
     Task<IEnumerable<Shape>?> GetShapesAsync(string dataOrigin);
     Task<IEnumerable<GTFSSearchStop>?> GetStopsAsync(string dataOrigin);
+    Task<IEnumerable<GTFSSearchStop>?> GetStopsInBoundsAsync(string dataOrigin, FeedViewportQuery query);
     Task<IEnumerable<TrainStationPerformance>> GetTrainStationPerformanceAsync();
     Task<IEnumerable<TrainStationPerformance>> GetTrainStationPerformanceInBoundsAsync(TrainStationViewportQuery query);
     Task<MapViewportData> GetMapViewportDataAsync(MapViewportQuery query);
     Task<IEnumerable<GTFSRoute>> GetRoutesByShapeAsync(string dataOrigin, string shapeId);
     Task<IEnumerable<GTFSRoute>> GetRoutesNearPointAsync(double latitude, double longitude, double bboxDegrees);
     Task<IEnumerable<KomIkaanVehiclePosition>?> GetPositionsAsync(string dataOrigin);
+    Task<IEnumerable<KomIkaanVehiclePosition>?> GetPositionsInBoundsAsync(string dataOrigin, FeedViewportQuery query);
     Task<IEnumerable<GTFSAlert>?> GetAlertsAsync(string dataOrigin, int limit, int offset);
     Task<IEnumerable<GTFSAlert>?> GetAlertsForStopAsync(Guid stopId, ExtendedRouteType stopType);
     Task<IEnumerable<TopDelayedStop>> GetTopDelayedStopsAsync(int limit, string? dataOrigin);

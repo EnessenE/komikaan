@@ -700,6 +700,33 @@ namespace komikaan.Context
             return data;
         }
 
+        public async Task<IEnumerable<GTFSSearchStop>?> GetStopsInBoundsAsync(string dataOrigin, FeedViewportQuery query)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            var data = await connection.QueryAsync<GTFSSearchStop>(
+            @"select * from get_stops_from_data_origin_in_bounds(@dataorigin, @minlat, @maxlat, @minlon, @maxlon, @limit)",
+                new { dataorigin = dataOrigin, minlat = query.MinLatitude, maxlat = query.MaxLatitude, minlon = query.MinLongitude, maxlon = query.MaxLongitude, limit = query.Limit },
+                commandType: CommandType.Text
+            );
+
+            foreach (var stop in data)
+            {
+                FixCoordinates(stop);
+            }
+
+            return data;
+        }
+
+        public async Task<IEnumerable<KomIkaanVehiclePosition>?> GetPositionsInBoundsAsync(string dataOrigin, FeedViewportQuery query)
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            return await connection.QueryAsync<KomIkaanVehiclePosition>(
+            @"select * from get_positions_from_data_origin_in_bounds(@dataorigin, @minlat, @maxlat, @minlon, @maxlon, @limit)",
+                new { dataorigin = dataOrigin, minlat = query.MinLatitude, maxlat = query.MaxLatitude, minlon = query.MinLongitude, maxlon = query.MaxLongitude, limit = query.Limit },
+                commandType: CommandType.Text
+            );
+        }
+
         async Task<IEnumerable<KomIkaanVehiclePosition>> IGTFSContext.GetNearbyVehiclesAsync(double longitude, double latitude, CancellationToken cancellationToken)
         {
             await using var connection = await _dataSource.OpenConnectionAsync();
